@@ -25,6 +25,8 @@ const getInfo_test = async (req, res) => {
 
 
 const userSignUp = async (req, res) => {
+
+    console.log(req.body)
     try {
         accountPool.query('BEGIN') ;
         console.log("userSignUp");
@@ -35,8 +37,10 @@ const userSignUp = async (req, res) => {
         // console.log(req.body);
         //ekhane change hobe
         // password = crypto.saltHashPassword("t");
-        const obj = {"username":"X-33","name":"Toriqe","email":"toriqe@gmail.com","password":"toriqe","phone":"01234","nid":23123,"Date_of_Birth":new Date("1998-12-12")};
-        req.body = obj;
+        //const obj = {"username":"X-33","name":"Toriqe","email":"toriqe@gmail.com","password":"toriqe","phone":"01234","nid":23123,"Date_of_Birth":new Date("1998-12-12")};
+        //req.body = obj;
+
+        obj = req.body
         console.log(req.body);
         // console.log(obj.username);
         ///////////////////////////
@@ -75,13 +79,18 @@ const userSignUp = async (req, res) => {
 
 //login
 const userLogin = async (req, res) => {
+
+    console.log(req.body)
     try {
         console.log("userLogin");
 
         ///////////////////////////
         //ekhane change hobe 
-        const obj = {"username":"X-33","password":crypto.saltHashPassword("toriqe","X-33")};
-        req.body = obj;
+        //const obj = {"username":"X-33","password":crypto.saltHashPassword("toriqe","X-33")};
+        // req.body = obj;
+
+        obj = req.body
+        obj.password = crypto.saltHashPassword(obj.password,obj.username)
         console.log(req.body);
         ////////////////////////////
 
