@@ -13,10 +13,10 @@ const secret = process.env.secret;
 const addschedule = async (req, res) => {  
     try{
         trainPool.query('BEGIN') ;
-        req.body.schedule_id = 6 ;
+        req.body.schedule_id = 9 ;
         req.body.train_id = 2 ;
-        req.body.train_uid = "Shugandha-743" ;
-        req.body.routes = ["Dhaka","NarayanGanj","Feni","Fazilpur","Chittagong"]
+        req.body.train_uid = "Shugandha-744" ;
+        req.body.routes = ["Dhaka","NarayanGanj","Feni","Chittagong"]
 
         req.body.routes = [
             {
@@ -31,11 +31,6 @@ const addschedule = async (req, res) => {
             },
             {
                 start : "Feni",
-                departure_time : "15:30:00",
-                cost_class: [300,330,500,650], 
-            },
-            {
-                start : "Fazilpur",
                 departure_time : "16:00:00",
                 cost_class: [300,340,500,690], 
             },
@@ -60,6 +55,7 @@ const addschedule = async (req, res) => {
 
 
         const result1 = (await trainPool.query(query1)).rows[0];
+        console.log(result1);
         console.log(result1.coaches.length);
         let max_row = 0 ;
         let max_col = 0 ;   
