@@ -1,9 +1,9 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// console.log(process.env.uriAir);
-const airPool = new Pool({
-    connectionString : process.env.uriAir,
+// console.log(process.env.uritrain);
+const trainPool = new Pool({
+    connectionString : process.env.uriTrain,
     idleTimeoutMillis: 0,
     connectionTimeoutMillis: 0,
     ssl: {
@@ -11,12 +11,12 @@ const airPool = new Pool({
     }
 });
 
-airPool.connect(err => {
+trainPool.connect(err => {
     if (err) {
         console.error('connection error', err.stack);
     } else {
-        console.log('connected to air database');
+        console.log('connected to train database');
     }
 });
 
-module.exports = airPool;
+module.exports = trainPool;
