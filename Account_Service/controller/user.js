@@ -50,7 +50,9 @@ const userSignUp = async (req, res) => {
         const user = result1.rows[0];
         if (user) {
             console.log("User username already exists");
+            // res.redirect('http://localhost:3000/user/login')
             res.status(409).json({ message: 'User already exists' });
+            // res.redirect('http://localhost:3000/user/login')
             return;
         }
         console.log("user not found ! will insert")
