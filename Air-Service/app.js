@@ -17,9 +17,9 @@ app.use('/user', userRouter);
 app.use('/admin', adminRouter);
 
 app.get('/', (req, res) => {
-    res.send('Account service is up and running');
+    res.send('Air service is up and running');
 });
 
 app.listen(port, () => {
-    console.log(`Account service listening on port ${port}`);
+    console.log(`Air service listening on port ${port}`);
 });
