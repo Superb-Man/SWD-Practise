@@ -13,7 +13,7 @@ const router = express.Router();
 router.get('/test/:from', bodyParser,testing.test);
 router.get('/air/from=:from', bodyParser,usearchController.getairinfoByfrom) ;
 router.get('/air/to=:to', bodyParser,usearchController.getairinfoByto) ;
-router.get('/air/flight_id:flight_id', bodyParser,usearchController.getairinfoByFlightID) ;
+router.get('/air/flight_id=:flight_id', bodyParser,usearchController.getairinfoByFlightID) ;
 router.get('/air/air_company=:air_company_name', bodyParser,usearchController.getairinfoByAirCompany) ;
 router.get('/air/:from/:to/:date/person=:persons/:class?', bodyParser,usearchController.getairinfo) ;
 router.get('/seat_details/:from/:to/:date/person=:persons/:class/:flight_id', bodyParser,usearchController.getSeatAvailableByspecificFlight) ;

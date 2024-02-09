@@ -19,12 +19,52 @@ const getairinfoByfrom = async (req, res) => {
     try{
         let obj = {from : req.params.from};
         console.log(obj);
+        //will handle later
+
         const query1 = {
-            text : 'SELECT * FROM "air_schedule_info" left join "air_services" on "air_schedule_info".air_id = "air_services".air_id WHERE from_port = $1',
-            values : [obj.from]
+            text : 'SELECT * FROM "air_schedule_info"',
+            values : []
         }
         let results = (await airPool.query(query1)).rows;
-        res.status(200).json(results);
+        console.log(results);
+        let res_objs = []
+        for(let i = 0;i<results.length;i++){
+            let res_obj = {
+                air_id : results[i].air_id,
+                flight_id: results[i].flight_id,
+                schedule_id : results[i].schedule_id,
+                transits : []
+            }
+            let j = 0 ;
+            let transits = [] ;
+            for(j = 0;j<results[i].transits.length;j++){
+                if(results[i].transits[j].port == obj.from){
+                    let transit = {
+                        date : new Date(results[i].transits[j].date),
+                        time : results[i].transits[j].time,
+                        port : results[i].transits[j].port
+                    }
+                    transits.push(transit) ;
+                    j++ ;
+                    break ;
+                }
+            }
+            for(;j<results[i].transits.length;j++){
+                let transit = {
+                    date : new Date(results[i].transits[j].date),
+                    time : results[i].transits[j].time,
+                    port : results[i].transits[j].port
+                }
+                transits.push(transit);
+            }
+
+            if(transits.length > 1) {
+                res_obj.trasits = transits ;
+                res_objs.push(res_obj);
+            }
+
+        }
+        res.status(200).json(res_objs);
     }catch (err){
         console.log(err);
         res.status(500).json({message: "Internal Server Error"});
@@ -32,20 +72,7 @@ const getairinfoByfrom = async (req, res) => {
 };
 
 const getairinfoByto = async (req, res) => {
-    try{
-        let obj = {to : req.params.to};
-        console.log(obj);
-        const query1 = {
-            text : 'SELECT * FROM "air_schedule_info" left join "air_services" on "air_schedule_info".air_id = "air_services".air_id WHERE to_port = $1',
-            values : [obj.to]
-        }
 
-        let results = (await airPool.query(query1)).rows;
-        res.status(200).json(results);
-    }catch (err){
-        console.log(err);
-        res.status(500).json({message: "Internal Server Error"});
-    }
 };
 
 const getairinfoByFlightID = async (req, res) => {
@@ -57,6 +84,7 @@ const getairinfoByFlightID = async (req, res) => {
             values : [obj.flight_id]
         }
         let results = (await airPool.query(query1)).rows;
+        console.log(results) ;
         res.status(200).json(results);
     }catch (err){
         console.log(err);
@@ -88,7 +116,6 @@ async function searchCommon(obj) {
         values : [obj.class_name]
     }
     let class_id = (await airPool.query(query1)).rows[0].class_id;
-    class_id-=1 ;
 
     return class_id ;
 }
@@ -101,7 +128,7 @@ const getairinfo = async (req, res) => {
         let obj = {from : req.params.from, to : req.params.to, date : req.params.date , seat : req.params.persons, class_name : req.params.class,query : req.query.q,low_range : req.query.low_range,up_range : req.query.up_range,hour : req.query.hour,minutes : req.query.minutes};
 
         console.log(obj);
-        const class_id = await searchCommon(obj) ;    
+        let class_id = await searchCommon(obj) ;    
         //find all from air_schedule_info 
         const query2 = {
             text : 'SELECT * FROM "air_schedule_info" left join "air_services"on "air_schedule_info".air_id = "air_services".air_id WHERE from_port = $1 and to_port = $2 and departure_date = $3',
@@ -115,10 +142,18 @@ const getairinfo = async (req, res) => {
         //find the dimensions of each flight using query
         for(let i = 0;i<results.length;i++){
             let query3 = {
-                text : 'SELECT dimensions FROM "air_details" WHERE air_id = $1 and flight_id = $2',
+                text : 'SELECT dimensions,classes FROM "air_details" WHERE air_id = $1 and flight_id = $2',
                 values : [results[0].air_id,results[0].flight_id]
             }
-            let dimensions = (await airPool.query(query3)).rows[0].dimensions ;
+            let dimension = -1 ;
+            let {dimensions,classes} = (await airPool.query(query3)).rows[0] ;
+            for(let j = 0 ; j<classes.length;j++){
+                if(classes[j] == class_id){
+                    class_id = j ;
+                    dimension = dimensions[j] ;
+                    break ;
+                }
+            }
             // console.log(dimensions.length);
     
             //reading if the seat is available or not
@@ -145,6 +180,7 @@ const getairinfo = async (req, res) => {
                         cost_class : results[i].cost_class[class_id],
                         class_name : obj.class_name,
                         air_company_name : results[i].company_name,
+                        dimensions : dimensions[class_id], //row-column
                         // seat_details : results[i].seat_details[class_id],
                         seat : obj.seat 
                     }
@@ -156,10 +192,7 @@ const getairinfo = async (req, res) => {
 
 
         
-        if(flights.length == 0){
-            res.status(404).json({message: "No flights found"});
-            return ;
-        }
+
         //Query handling
 
 
@@ -182,6 +215,12 @@ const getairinfo = async (req, res) => {
         if(obj.hour != undefined && obj.minutes != undefined){
             flights = queryUtils.queryBytime(flights,(obj.hour*60+obj.minutes)*60) ;
         }
+
+        if(flights.length == 0){
+            res.status(404).json({message: "No flights found"});
+            return ;
+        }
+
         res.status(200).json(flights); 
 
 
@@ -197,7 +236,7 @@ const getSeatAvailableByspecificFlight = async (req, res) => {
     try{
         let obj = {from : req.params.from, to : req.params.to, date : req.params.date , seat : req.params.persons, class_name : req.params.class,flight_id : req.params.flight_id};
         console.log(obj);
-        const class_id = await searchCommon(obj) ;
+        let class_id = await searchCommon(obj) ;
     
     
         //find all from air_schedule_info 
@@ -209,10 +248,18 @@ const getSeatAvailableByspecificFlight = async (req, res) => {
         let results = (await airPool.query(query2)).rows;
 
         let query3 = {
-            text : 'SELECT dimensions FROM "air_details" WHERE air_id = $1 and flight_id = $2',
+            text : 'SELECT dimensions,classes FROM "air_details" WHERE air_id = $1 and flight_id = $2',
             values : [results[0].air_id,results[0].flight_id]
         }
-        let dimensions = (await airPool.query(query3)).rows[0].dimensions ; 
+        let dimension = -1 ;
+        let {dimensions,classes} = (await airPool.query(query3)).rows[0] ;
+        for(let j = 0 ; j<classes.length;j++){
+            if(classes[j] == class_id){
+                class_id = j ;
+                dimension = dimensions[j] ;
+                break ;
+            }
+        }
         let ans = 0 ;
         // this loop is not mandatory. Still for safety, checking again   
         // for(let j = 0 ; j<dimensions[class_id][0] * dimensions[class_id][1];j++){
@@ -234,6 +281,7 @@ const getSeatAvailableByspecificFlight = async (req, res) => {
                     arrival_time : results[0].arrival_time,
                     cost_class : results[0].cost_class[class_id],
                     class_name : obj.class_name,
+                    dimension: dimensions[class_id], //row-column
                     air_company_name : results[0].company_name,
                     seat_details : results[0].seat_details[class_id],
                     seat : obj.seat 
