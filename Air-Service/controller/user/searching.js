@@ -22,49 +22,61 @@ const getairinfoByfrom = async (req, res) => {
         //will handle later
 
         const query1 = {
-            text : 'SELECT * FROM "air_schedule_info"',
-            values : []
+            text : `SELECT "air_schedule_info".schedule_id,
+            "air_schedule_info".air_id,"air_schedule_info".flight_id,
+            "air_schedule_info".from_port,"air_schedule_info".to_port,
+            "air_schedule_info".departure_date,"air_schedule_info".departure_time,
+            "air_schedule_info".transits,
+            "air_schedule_info".arrival_date,"air_schedule_info".arrival_time,"air_schedule_info".cost_class,
+            "air_services".company_name FROM "air_schedule_info" left join "air_services" on "air_schedule_info".air_id = "air_services".air_id WHERE from_port = $1`,
+            values : [obj.from]
         }
         let results = (await airPool.query(query1)).rows;
-        console.log(results);
-        let res_objs = []
-        for(let i = 0;i<results.length;i++){
-            let res_obj = {
-                air_id : results[i].air_id,
-                flight_id: results[i].flight_id,
-                schedule_id : results[i].schedule_id,
-                transits : []
-            }
-            let j = 0 ;
-            let transits = [] ;
-            for(j = 0;j<results[i].transits.length;j++){
-                if(results[i].transits[j].port == obj.from){
-                    let transit = {
-                        date : new Date(results[i].transits[j].date),
-                        time : results[i].transits[j].time,
-                        port : results[i].transits[j].port
-                    }
-                    transits.push(transit) ;
-                    j++ ;
-                    break ;
-                }
-            }
-            for(;j<results[i].transits.length;j++){
-                let transit = {
-                    date : new Date(results[i].transits[j].date),
-                    time : results[i].transits[j].time,
-                    port : results[i].transits[j].port
-                }
-                transits.push(transit);
-            }
 
-            if(transits.length > 1) {
-                res_obj.trasits = transits ;
-                res_objs.push(res_obj);
-            }
+        // const query1 = {
+        //     text : 'SELECT * FROM "air_schedule_info"',
+        //     values : []
+        // }
+        // let results = (await airPool.query(query1)).rows;
+        // console.log(results);
+        // let res_objs = []
+        // for(let i = 0;i<results.length;i++){
+        //     let res_obj = {
+        //         air_id : results[i].air_id,
+        //         flight_id: results[i].flight_id,
+        //         schedule_id : results[i].schedule_id,
+        //         transits : []
+        //     }
+        //     let j = 0 ;
+        //     let transits = [] ;
+        //     for(j = 0;j<results[i].transits.length;j++){
+        //         if(results[i].transits[j].port == obj.from){
+        //             let transit = {
+        //                 date : new Date(results[i].transits[j].date),
+        //                 time : results[i].transits[j].time,
+        //                 port : results[i].transits[j].port
+        //             }
+        //             transits.push(transit) ;
+        //             j++ ;
+        //             break ;
+        //         }
+        //     }
+        //     for(;j<results[i].transits.length;j++){
+        //         let transit = {
+        //             date : new Date(results[i].transits[j].date),
+        //             time : results[i].transits[j].time,
+        //             port : results[i].transits[j].port
+        //         }
+        //         transits.push(transit);
+        //     }
 
-        }
-        res.status(200).json(res_objs);
+        //     if(transits.length > 1) {
+        //         res_obj.trasits = transits ;
+        //         res_objs.push(res_obj);
+        //     }
+
+        // }
+        res.status(200).json(results);
     }catch (err){
         console.log(err);
         res.status(500).json({message: "Internal Server Error"});
@@ -72,7 +84,25 @@ const getairinfoByfrom = async (req, res) => {
 };
 
 const getairinfoByto = async (req, res) => {
-
+    try{
+        let obj = {to : req.params.to};
+        console.log(obj);
+        const query1 = {
+            text : `SELECT "air_schedule_info".schedule_id,
+            "air_schedule_info".air_id,"air_schedule_info".flight_id,
+            "air_schedule_info".from_port,"air_schedule_info".to_port,
+            "air_schedule_info".departure_date,"air_schedule_info".departure_time,
+            "air_schedule_info".transits,
+            "air_schedule_info".arrival_date,"air_schedule_info".arrival_time,"air_schedule_info".cost_class,
+            "air_services".company_name FROM "air_schedule_info" left join "air_services" on "air_schedule_info".air_id = "air_services".air_id WHERE to_port = $1`,
+            values : [obj.to]
+        }
+        let results = (await airPool.query(query1)).rows;
+        res.status(200).json(results);
+    }catch (err){
+        console.log(err);
+        res.status(500).json({message: "Internal Server Error"});
+    }
 };
 
 const getairinfoByFlightID = async (req, res) => {
@@ -180,6 +210,7 @@ const getairinfo = async (req, res) => {
                         cost_class : results[i].cost_class[class_id],
                         class_name : obj.class_name,
                         air_company_name : results[i].company_name,
+                        transits : results[i].transits,
                         dimensions : dimensions[class_id], //row-column
                         // seat_details : results[i].seat_details[class_id],
                         seat : obj.seat 
@@ -284,6 +315,7 @@ const getSeatAvailableByspecificFlight = async (req, res) => {
                     dimension: dimensions[class_id], //row-column
                     air_company_name : results[0].company_name,
                     seat_details : results[0].seat_details[class_id],
+                    transits : results[0].transits,
                     seat : obj.seat 
                 }
             // }
