@@ -19,12 +19,52 @@ const getairinfoByfrom = async (req, res) => {
     try{
         let obj = {from : req.params.from};
         console.log(obj);
+        //will handle later
+
         const query1 = {
-            text : 'SELECT * FROM "air_schedule_info" left join "air_services" on "air_schedule_info".air_id = "air_services".air_id WHERE from_port = $1',
-            values : [obj.from]
+            text : 'SELECT * FROM "air_schedule_info"',
+            values : []
         }
         let results = (await airPool.query(query1)).rows;
-        res.status(200).json(results);
+        console.log(results);
+        let res_objs = []
+        for(let i = 0;i<results.length;i++){
+            let res_obj = {
+                air_id : results[i].air_id,
+                flight_id: results[i].flight_id,
+                schedule_id : results[i].schedule_id,
+                transits : []
+            }
+            let j = 0 ;
+            let transits = [] ;
+            for(j = 0;j<results[i].transits.length;j++){
+                if(results[i].transits[j].port == obj.from){
+                    let transit = {
+                        date : new Date(results[i].transits[j].date),
+                        time : results[i].transits[j].time,
+                        port : results[i].transits[j].port
+                    }
+                    transits.push(transit) ;
+                    j++ ;
+                    break ;
+                }
+            }
+            for(;j<results[i].transits.length;j++){
+                let transit = {
+                    date : new Date(results[i].transits[j].date),
+                    time : results[i].transits[j].time,
+                    port : results[i].transits[j].port
+                }
+                transits.push(transit);
+            }
+
+            if(transits.length > 1) {
+                res_obj.trasits = transits ;
+                res_objs.push(res_obj);
+            }
+
+        }
+        res.status(200).json(res_objs);
     }catch (err){
         console.log(err);
         res.status(500).json({message: "Internal Server Error"});
@@ -32,20 +72,7 @@ const getairinfoByfrom = async (req, res) => {
 };
 
 const getairinfoByto = async (req, res) => {
-    try{
-        let obj = {to : req.params.to};
-        console.log(obj);
-        const query1 = {
-            text : 'SELECT * FROM "air_schedule_info" left join "air_services" on "air_schedule_info".air_id = "air_services".air_id WHERE to_port = $1',
-            values : [obj.to]
-        }
 
-        let results = (await airPool.query(query1)).rows;
-        res.status(200).json(results);
-    }catch (err){
-        console.log(err);
-        res.status(500).json({message: "Internal Server Error"});
-    }
 };
 
 const getairinfoByFlightID = async (req, res) => {
@@ -57,6 +84,7 @@ const getairinfoByFlightID = async (req, res) => {
             values : [obj.flight_id]
         }
         let results = (await airPool.query(query1)).rows;
+        console.log(results) ;
         res.status(200).json(results);
     }catch (err){
         console.log(err);
