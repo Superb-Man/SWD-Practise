@@ -13,7 +13,7 @@ const secret = process.env.secret;
 const addschedule = async (req, res) => {  
     try{
         trainPool.query('BEGIN') ;
-        req.body.schedule_id = 9 ;
+        req.body.schedule_id = 10 ;
         req.body.train_id = 2 ;
         req.body.train_uid = "Shugandha-744" ;
         req.body.routes = ["Dhaka","NarayanGanj","Feni","Chittagong"]
@@ -22,6 +22,7 @@ const addschedule = async (req, res) => {
             {
                 start : "Dhaka",
                 departure_time : "10:00:00",
+                // departure_date : new Date("2024-02-01"),
                 cost_class: [130,200,350,420],
             },
             {
