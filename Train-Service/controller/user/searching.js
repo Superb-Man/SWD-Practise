@@ -14,12 +14,11 @@ dotenv.config();
 const secret = process.env.secret;
 
 async function filter(from,to,date) {
-    const query2 = {
+    const query1 = {
         text : 'SELECT * FROM "train_schedule_info"',
         values : []
     }
-    let result2 = (await trainPool.query(query1)).rows;
-    console.log(results);
+    let results = (await trainPool.query(query1)).rows;
     let res_objs = []
     for(let i = 0;i<results.length;i++){
         let res_obj = {
@@ -32,12 +31,14 @@ async function filter(from,to,date) {
         let j = 0 ;
         let routes = [] ;
         for(j = 0;j<results[i].routes.length;j++){
-            console.log(results[i].routes[j].date,obj.date) ;
-            if(results[i].routes[j].start == obj.from && j != results[i].routes.length -1 && results[i].routes[j].date == obj.date){
+            let x = new Date(results[i].routes[j].date).toLocaleDateString() ;
+            let y = new Date(date).toLocaleDateString() ;
+            if(results[i].routes[j].start == from && j != results[i].routes.length -1 && x.localeCompare(y) == 0){
                 let route = {
-                    date : results[i].routes[j].date.toLocaleDateString(),
-                    departure_time : results[i].routes[j].time,
-                    start : results[i].routes[j].start
+                    date : results[i].routes[j].date,
+                    departure_time : results[i].routes[j].departure_time,
+                    start : results[i].routes[j].start,
+                    cost_class : results[i].routes[j].cost_class
                 }
                 routes.push(route) ;
                 j++ ;
@@ -47,12 +48,13 @@ async function filter(from,to,date) {
         let boolean = false ;
         for(;j<results[i].routes.length;j++){
             let route = {
-                date : results[i].routes[j].date.toLocaleDateString(),
-                departure_time : results[i].routes[j].time,
-                start : results[i].routes[j].start
+                date : results[i].routes[j].date,
+                departure_time : results[i].routes[j].departure_time,
+                start : results[i].routes[j].start,
+                cost_class : results[i].routes[j].cost_class
             }
             routes.push(route);
-            if(results[i].routes[j].start == obj.to && j != 0){
+            if(results[i].routes[j].start == to && j != 0){
                 boolean = true ;
                 break ;
             }
@@ -64,7 +66,6 @@ async function filter(from,to,date) {
         }
 
     }
-
     return res_objs ;
 
 }
@@ -89,7 +90,7 @@ const gettraininfoByto = async (req, res) => {
             text : `SELECT "train_schedule_info".schedule_id,
             "train_schedule_info".train_id,"train_schedule_info".train_uid,
             "train_schedule_info".from_port,"train_schedule_info".to_port,
-            "train_schedule_info".departure_date,"train_schedule_info".departure_time,
+            "train_schedule_info".date,"train_schedule_info".departure_time,
             "train_schedule_info".routes,
             "train_schedule_info".arrival_date,"train_schedule_info".arrival_time,"train_schedule_info".cost_class,
             "train_services".company_name FROM "train_schedule_info" left join "train_services" on "train_schedule_info".train_id = "train_services".train_id WHERE to_port = $1`,
@@ -103,7 +104,7 @@ const gettraininfoByto = async (req, res) => {
     }
 };
 
-const gettraininfoByFlightID = async (req, res) => {
+const gettraininfoBytrainID = async (req, res) => {
     try{
         let obj = {train_uid : req.params.train_uid};
         console.log(obj);
@@ -141,11 +142,13 @@ const gettraininfoBytrainCompany = async (req, res) => {
 async function searchCommon(obj) {
     const query1 = {
         text : 'SELECT coach_id FROM "coach_info" WHERE coach_name = $1',
-        values : [obj.class_name]
+        values : [obj.coach_name]
     }
-    let class_id = (await trainPool.query(query1)).rows[0].class_id;
+    console.log(obj.coach_name) ;
+    let coach_id = (await trainPool.query(query1)).rows[0].coach_id;
+    console.log(coach_id,"is the coach id");
 
-    return class_id ;
+    return coach_id ;
 }
 
 
@@ -159,60 +162,63 @@ const gettraininfo = async (req, res) => {
         let coach_id = await searchCommon(obj) ;    
         //find all from train_schedule_info 
     
-        let results = filter(obj.from,obj.to,obj.date,class_id) ;
+        let results = await filter(obj.from,obj.to,obj.date) ;
         console.log(results);
-        let flights = [] ;
+        let trains = [] ;
 
-        //find the dimensions of each flight using query
+        //find the dimensions of each train using query
         for(let i = 0;i<results.length;i++){
             let query3 = {
                 text : 'SELECT dimensions,coaches FROM "train_details" WHERE train_id = $1 and train_uid = $2',
-                values : [results[0].train_id,results[0].train_uid]
+                values : [results[i].train_id,results[i].train_uid]
             }
             let dimension = -1 ;
+            let coach_idx = -1 ;
             let {dimensions,coaches} = (await trainPool.query(query3)).rows[0] ;
             for(let j = 0 ; j<coaches.length;j++){
                 if(coaches[j] == coach_id){
-                    coach_id = j ;
+                    coach_idx = j ;
                     dimension = dimensions[j] ;
                     break ;
                 }
+            }
+            if(coach_idx == -1){
+                continue ;
             }
             // console.log(dimensions.length);
     
             //reading if the seat is available or not
             let ans = 0 ;   
-            for(let j = 0 ; j<dimensions[class_id][2] * dimensions[coach_id][0];j++){
-                if(results[i].seat_details[class_id][j][2] == 0) {
+            for(let j = 0 ; j<dimensions[coach_idx][2] * dimensions[coach_idx][0]*dimensions[coach_idx][1];j++){
+                if(results[i].seat_details[coach_idx][j][2] == 0) {
                     ans+=1;
                 }
-                if(ans>=obj.seat){
-                    let times = queryUtils.timeDifference(results[i].departure_date,results[i].arrival_date,results[i].departure_time,results[i].arrival_time);
-                    let flight_result = {
+                if(ans >= obj.seat){
+                    let l = results[i].routes.length ;
+                    let times = queryUtils.timeDifference(new Date(results[i].routes[0].date),new Date(results[i].routes[l-1].date),results[i].routes[0].departure_time,results[i].routes[l-1].departure_time);
+                    let train_result = {
                         schedule_id : results[i].schedule_id,
                         train_id : results[i].train_id,
                         train_uid : results[i].train_uid ,
-                        from_port : obj.from,
-                        to_Port : obj.to,
+                        routes : results[i].routes,
                         duration_hour :times.hours,
                         duration_minutes : times.minutes,
                         durations : times.durations,
-                        departure_date : results[i].departure_date.toLocaleDateString(), 
-                        departure_time : results[i].departure_time,
-                        arrival_date :  results[i].arrival_date.toLocaleDateString(),
-                        arrival_time : results[i].arrival_time,
-                        cost_class : results[i].cost_class[class_id],
-                        class_name : obj.class_name,
+                        date : new Date(results[i].routes[0].date), 
+                        departure_time : results[i].routes[0].time,
+                        arrival_date :  new Date(results[i].routes[l-1].date),
+                        arrival_time : results[i].routes[l-1].time,
+                        cost_class : results[i].routes[l-1].cost_class[coach_idx] -  results[i].routes[0].cost_class[coach_idx] ,
+                        coach_name : obj.coach_name,
                         train_company_name : results[i].company_name,
                         routes : results[i].routes,
-                        dimensions : dimensions[class_id], //row-column
-                        // seat_details : results[i].seat_details[class_id],
                         seat : obj.seat 
                     }
-                    flights.push(flight_result);
+                    trains.push(train_result);
                     break ;
                 }
             }
+            console.log(trains);
         }
 
 
@@ -220,33 +226,28 @@ const gettraininfo = async (req, res) => {
 
         //Query handling
 
-
-        if(obj.query != undefined && obj.query.localeCompare('early_takeoff') == 0) {
-            flights = queryUtils.earlyDeparture(flights) ;
-        }
         if(obj.query != undefined && obj.query.localeCompare('quickest') == 0) {
-            flights = queryUtils.findQuickestFlight(flights) ;
+            trains = queryUtils.findQuickesttrain(trains) ;
             // console.log('here') ;
         }
-
-        if(obj.query != undefined && obj.query.localeCompare('cheapest') == 0) {
-            queryUtils.findCheapestFlight(flights) ;
+        if(obj.query != undefined && obj.query.localeCompare('shortestroutes')){
+            trains = queryUtils.findShortestRoutes(trains) ;
         }
 
-        if(obj.low_range != undefined && obj.up_range != undefined){
-            flights = queryUtils.rangeMoney(flights,parseInt(obj.low_range),parseInt(obj.up_range)) ;  
-            console.log('here') ;     
-        }
-        if(obj.hour != undefined && obj.minutes != undefined){
-            flights = queryUtils.queryBytime(flights,(obj.hour*60+obj.minutes)*60) ;
-        }
+        // if(obj.low_range != undefined && obj.up_range != undefined){
+        //     trains = queryUtils.rangeMoney(trains,parseInt(obj.low_range),parseInt(obj.up_range)) ;  
+        //     console.log('here') ;     
+        // }
+        // if(obj.hour != undefined && obj.minutes != undefined){
+        //     trains = queryUtils.queryBytime(trains,(obj.hour*60+obj.minutes)*60) ;
+        // }
 
-        if(flights.length == 0){
-            res.status(404).json({message: "No flights found"});
+        if(trains.length == 0){
+            res.status(404).json({message: "No trains found"});
             return ;
         }
 
-        res.status(200).json(flights); 
+        res.status(200).json(trains); 
 
 
     }catch(err){
@@ -257,7 +258,7 @@ const gettraininfo = async (req, res) => {
 
 
 //still doesnot need verification
-const getSeatAvailableByspecificFlight = async (req, res) => {
+const getSeatAvailableByspecifictrain = async (req, res) => {
     try{
         let obj = {from : req.params.from, to : req.params.to, date : req.params.date , seat : req.params.persons, class_name : req.params.class,train_uid : req.params.train_uid};
         console.log(obj);
@@ -266,7 +267,7 @@ const getSeatAvailableByspecificFlight = async (req, res) => {
     
         //find all from train_schedule_info 
         const query2 = {
-            text : 'SELECT * FROM "train_schedule_info" left join "train_services"on "train_schedule_info".train_id = "train_services".train_id WHERE from_port = $1 and to_port = $2 and departure_date = $3 and train_uid = $4',
+            text : 'SELECT * FROM "train_schedule_info" left join "train_services"on "train_schedule_info".train_id = "train_services".train_id WHERE from_port = $1 and to_port = $2 and date = $3 and train_uid = $4',
             values : [obj.from,obj.to,obj.date,obj.train_uid]
         }
     
@@ -292,22 +293,21 @@ const getSeatAvailableByspecificFlight = async (req, res) => {
         //         ans+=1;
         //     }
         //     if(ans>=obj.seat){
-            let times = queryUtils.timeDifference(results[0].departure_date,results[0].arrival_date,results[0].departure_time,results[0].arrival_time);
-                let flight_result = {
+            let times = queryUtils.timeDifference(results[0].date,results[0].arrival_date,results[0].departure_time,results[0].arrival_time);
+                let train_result = {
                     schedule_id : results[0].schedule_id,
                     train_uid : results[0].train_uid ,
                     from_Port : obj.from,
                     to_Port : obj.to,
                     duration_hour :times.hours,
                     duration_minutes : times.minutes,
-                    departure_date : results[0].departure_date.toLocaleDateString(), 
+                    date : results[0].date.toLocaleDateString(), 
                     departure_time : results[0].departure_time,
                     arrival_date :  results[0].arrival_date.toLocaleDateString(),
                     arrival_time : results[0].arrival_time,
                     cost_class : results[0].cost_class[class_id],
                     class_name : obj.class_name,
                     dimension: dimensions[class_id], //row-column
-                    train_company_name : results[0].company_name,
                     seat_details : results[0].seat_details[class_id],
                     routes : results[0].routes,
                     seat : obj.seat 
@@ -315,7 +315,7 @@ const getSeatAvailableByspecificFlight = async (req, res) => {
             // }
         // }
 
-        res.status(200).json(flight_result);
+        res.status(200).json(train_result);
 
     }catch (err){
         console.log(err);
@@ -330,7 +330,7 @@ const getSeatAvailableByspecificFlight = async (req, res) => {
 module.exports = { gettraininfo,
                     gettraininfoByfrom,
                     gettraininfoByto,
-                    gettraininfoByFlightID,
-                    getSeatAvailableByspecificFlight,
+                    gettraininfoBytrainID,
+                    getSeatAvailableByspecifictrain,
                     gettraininfoBytrainCompany,
                 };    
