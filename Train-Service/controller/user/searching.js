@@ -33,11 +33,11 @@ async function filter(from,to,date) {
         let routes = [] ;
         for(j = 0;j<results[i].routes.length;j++){
             console.log(results[i].routes[j].date,obj.date) ;
-            if(results[i].routes[j].port == obj.from && j != results[i].routes.length -1 && results[i].routes[j].date == obj.date){
+            if(results[i].routes[j].start == obj.from && j != results[i].routes.length -1 && results[i].routes[j].date == obj.date){
                 let route = {
                     date : results[i].routes[j].date.toLocaleDateString(),
                     departure_time : results[i].routes[j].time,
-                    start : results[i].routes[j].port
+                    start : results[i].routes[j].start
                 }
                 routes.push(route) ;
                 j++ ;
@@ -49,10 +49,10 @@ async function filter(from,to,date) {
             let route = {
                 date : results[i].routes[j].date.toLocaleDateString(),
                 departure_time : results[i].routes[j].time,
-                start : results[i].routes[j].port
+                start : results[i].routes[j].start
             }
             routes.push(route);
-            if(results[i].routes[j].port == obj.to && j != 0){
+            if(results[i].routes[j].start == obj.to && j != 0){
                 boolean = true ;
                 break ;
             }
@@ -153,10 +153,10 @@ const gettraininfo = async (req, res) => {
    // console.log(req) ;
     try{
         // const obj = {"from" : req.params.from, "to" : req.params.to, "date" : req.params.date , "seat" : req.body.seat, "class" : req.body.class};
-        let obj = {from : req.params.from, to : req.params.to, date : req.params.date , seat : req.params.persons, class_name : req.params.class,query : req.query.q,low_range : req.query.low_range,up_range : req.query.up_range,hour : req.query.hour,minutes : req.query.minutes};
+        let obj = {from : req.params.from, to : req.params.to, date : req.params.date , seat : req.params.persons, coach_name : req.params.coach,query : req.query.q,low_range : req.query.low_range,up_range : req.query.up_range,hour : req.query.hour,minutes : req.query.minutes};
 
         console.log(obj);
-        let class_id = await searchCommon(obj) ;    
+        let coach_id = await searchCommon(obj) ;    
         //find all from train_schedule_info 
     
         let results = filter(obj.from,obj.to,obj.date,class_id) ;
@@ -171,9 +171,9 @@ const gettraininfo = async (req, res) => {
             }
             let dimension = -1 ;
             let {dimensions,coaches} = (await trainPool.query(query3)).rows[0] ;
-            for(let j = 0 ; j<classes.length;j++){
-                if(classes[j] == class_id){
-                    class_id = j ;
+            for(let j = 0 ; j<coaches.length;j++){
+                if(coaches[j] == coach_id){
+                    coach_id = j ;
                     dimension = dimensions[j] ;
                     break ;
                 }
@@ -182,7 +182,7 @@ const gettraininfo = async (req, res) => {
     
             //reading if the seat is available or not
             let ans = 0 ;   
-            for(let j = 0 ; j<dimensions[class_id][0] * dimensions[class_id][1];j++){
+            for(let j = 0 ; j<dimensions[class_id][2] * dimensions[coach_id][0];j++){
                 if(results[i].seat_details[class_id][j][2] == 0) {
                     ans+=1;
                 }

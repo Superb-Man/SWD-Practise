@@ -10,6 +10,97 @@ dotenv.config();
 //token check hobe
 const secret = process.env.secret;
 
+
+const add_train_company = async (req, res) => {
+    try {
+        //checking if same train company added
+        const query = {
+            text: 'SELECT * FROM "train_company" WHERE company_name = $1',
+            values: [req.body.company_name]
+        }
+        const result = await trainPool.query(query);
+        if (result.rows.length > 0) {
+            res.status(400).json({ message: "Train company already exists" });
+            return;
+        }
+        const { company_name, company_email, company_phone, company_address, company_license } = req.body;
+        const query1 = {
+            text: 'INSERT INTO "train_company" (company_name, company_email, company_phone, company_address, company_license) VALUES ($1, $2, $3, $4, $5)',
+            values: [company_name, company_email, company_phone, company_address, company_license]
+        }
+        const result1 = await trainPool.query(query1);
+        res.status(200).json({ message: "Train company added" });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
+
+
+const add_train = async (req, res) => {
+    try {
+        //checking if same train added
+        const query = {
+            text: 'SELECT * FROM "train_details" WHERE train_uid = $1',
+            values: [req.body.train_uid]
+        }
+        const result = await trainPool.query(query);
+        if (result.rows.length > 0) {
+            res.status(400).json({ message: "Train already exists" });
+            return;
+        }
+        const { train_uid, train_name, train_type, train_category, train_classes, train_coaches, train_dimensions, train_routes, train_stations, train_departure, train_arrival, train_stops, train_days, train_fare } = req.body;
+        const query1 = {
+            text: 'INSERT INTO "train_details" (train_uid, train_name, train_type, train_category, train_classes, train_coaches, train_dimensions, train_routes, train_stations, train_departure, train_arrival, train_stops, train_days, train_fare) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,$11, $12, $13, $14)',
+            values: [train_uid, train_name, train_type, train_category, train_classes, train_coaches, train_dimensions, train_routes, train_stations, train_departure, train_arrival, train_stops, train_days, train_fare]
+        }
+        const result1 = await trainPool.query(query1);
+        res.status(200).json({ message: "Train added" });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
+const add_coach_details = async (req, res) => {
+    //add coach_details of an specific train_uid
+    try {
+        const { train_uid, coach_id, coach_type, coach_classes, coach_dimensions, coach_fare } = req.body;
+        const query1 = {
+            text: 'INSERT INTO "coach_details" (train_uid, coach_id, coach_type, coach_classes, coach_dimensions, coach_fare) VALUES ($1, $2, $3, $4, $5, $6)',
+            values: [train_uid, coach_id, coach_type, coach_classes, coach_dimensions, coach_fare]
+        }
+        const result1 = await trainPool.query(query1);
+        res.status(200).json({ message: "Coach details added" });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
+const add_route = async (req, res) => {
+    //add route of an specific train_uid
+    try {
+        const { train_uid, route_id, route_name, route_distance, route_time } = req.body;
+        const query1 = {
+            text: 'INSERT INTO "train_routes" (train_uid, route_id, route_name, route_distance, route_time) VALUES ($1, $2, $3, $4, $5)',
+            values: [train_uid, route_id, route_name, route_distance, route_time]
+        }
+        const result1 = await trainPool.query(query1);
+        res.status(200).json({ message: "Route added" });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
+
+
+
+
+
+
 const addschedule = async (req, res) => {  
     try{
         trainPool.query('BEGIN') ;
@@ -113,4 +204,4 @@ const addschedule = async (req, res) => {
     }
 } ;
 
-module.exports = { addschedule };
+module.exports = { add_train_company, add_train, add_coach_details, add_route, addschedule };
