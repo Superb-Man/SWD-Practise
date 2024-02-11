@@ -176,20 +176,24 @@ const getairinfo = async (req, res) => {
                 values : [results[0].air_id,results[0].flight_id]
             }
             let dimension = -1 ;
+            let class_idx = -1 ;
             let {dimensions,classes} = (await airPool.query(query3)).rows[0] ;
             for(let j = 0 ; j<classes.length;j++){
                 if(classes[j] == class_id){
-                    class_id = j ;
+                    class_idx = j ;
                     dimension = dimensions[j] ;
                     break ;
                 }
+            }
+            if(class_idx == -1) {
+                continue ;
             }
             // console.log(dimensions.length);
     
             //reading if the seat is available or not
             let ans = 0 ;   
-            for(let j = 0 ; j<dimensions[class_id][0] * dimensions[class_id][1];j++){
-                if(results[i].seat_details[class_id][j][2] == 0) {
+            for(let j = 0 ; j<dimensions[class_idx][0] * dimensions[class_idx][1];j++){
+                if(results[i].seat_details[class_idx][j][2] == 0) {
                     ans+=1;
                 }
                 if(ans>=obj.seat){
@@ -207,11 +211,11 @@ const getairinfo = async (req, res) => {
                         departure_time : results[i].departure_time,
                         arrival_date :  results[i].arrival_date.toLocaleDateString(),
                         arrival_time : results[i].arrival_time,
-                        cost_class : results[i].cost_class[class_id],
+                        cost_class : results[i].cost_class[class_idx],
                         class_name : obj.class_name,
                         air_company_name : results[i].company_name,
                         transits : results[i].transits,
-                        dimensions : dimensions[class_id], //row-column
+                        dimensions : dimensions[class_idx], //row-column
                         // seat_details : results[i].seat_details[class_id],
                         seat : obj.seat 
                     }
@@ -283,10 +287,11 @@ const getSeatAvailableByspecificFlight = async (req, res) => {
             values : [results[0].air_id,results[0].flight_id]
         }
         let dimension = -1 ;
+        let class_idx = -1 ;
         let {dimensions,classes} = (await airPool.query(query3)).rows[0] ;
         for(let j = 0 ; j<classes.length;j++){
             if(classes[j] == class_id){
-                class_id = j ;
+                class_idx = j ;
                 dimension = dimensions[j] ;
                 break ;
             }
@@ -310,11 +315,11 @@ const getSeatAvailableByspecificFlight = async (req, res) => {
                     departure_time : results[0].departure_time,
                     arrival_date :  results[0].arrival_date.toLocaleDateString(),
                     arrival_time : results[0].arrival_time,
-                    cost_class : results[0].cost_class[class_id],
+                    cost_class : results[0].cost_class[class_idx],
                     class_name : obj.class_name,
-                    dimension: dimensions[class_id], //row-column
+                    dimension: dimensions[class_idx], //row-column
                     air_company_name : results[0].company_name,
-                    seat_details : results[0].seat_details[class_id],
+                    seat_details : results[0].seat_details[class_idx],
                     transits : results[0].transits,
                     seat : obj.seat 
                 }
