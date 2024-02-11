@@ -185,9 +185,7 @@ const gettraininfo = async (req, res) => {
             if(coach_idx == -1){
                 continue ;
             }
-            // console.log(dimensions.length);
-    
-            //reading if the seat is available or not
+
             let ans = 0 ;   
             for(let j = 0 ; j<dimensions[coach_idx][2] * dimensions[coach_idx][0]*dimensions[coach_idx][1];j++){
                 if(results[i].seat_details[coach_idx][j][2] == 0) {
@@ -210,7 +208,6 @@ const gettraininfo = async (req, res) => {
                         arrival_time : results[i].routes[l-1].time,
                         cost_class : results[i].routes[l-1].cost_class[coach_idx] -  results[i].routes[0].cost_class[coach_idx] ,
                         coach_name : obj.coach_name,
-                        train_company_name : results[i].company_name,
                         routes : results[i].routes,
                         seat : obj.seat 
                     }
@@ -230,7 +227,7 @@ const gettraininfo = async (req, res) => {
             trains = queryUtils.findQuickesttrain(trains) ;
             // console.log('here') ;
         }
-        if(obj.query != undefined && obj.query.localeCompare('shortestroutes')){
+        if(obj.query != undefined && obj.query.localeCompare('shortestroutes') == 0){
             trains = queryUtils.findShortestRoutes(trains) ;
         }
 
