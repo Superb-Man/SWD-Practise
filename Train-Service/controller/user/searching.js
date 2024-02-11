@@ -290,37 +290,29 @@ const getSeatAvailableByspecifictrain = async (req, res) => {
                 break ;
             }
         }
-        // console.log(dimension,coach_idx) ; 
-        // let ans = 0 ;
-        // this loop is not mandatory. Still for safety, checking again   
-        // for(let j = 0 ; j<dimensions[class_id][0] * dimensions[class_id][1];j++){
-        //     if(results[i].seat_details[class_id][j][2] == 0) {
-        //         ans+=1;
-        //     }
-        //     if(ans>=obj.seat){
-            let l = results[0].routes.length ;
-            let times = queryUtils.timeDifference(new Date(results[0].routes[0].date),new Date(results[0].routes[l-1].date),results[0].routes[0].departure_time,results[0].routes[l-1].departure_time);
-            let train_result = {
-                schedule_id : results[0].schedule_id,
-                train_id : results[0].train_id,
-                train_uid : results[0].train_uid ,
-                routes : results[0].routes,
-                duration_hour :times.hours,
-                duration_minutes : times.minutes,
-                durations : times.durations,
-                departure_date : new Date(results[0].routes[0].date), 
-                departure_time : results[0].routes[0].time,
-                arrival_date :  new Date(results[0].routes[l-1].date),
-                arrival_time : results[0].routes[l-1].time,
-                cost_class : results[0].routes[l-1].cost_class[coach_idx] - results[0].routes[0].cost_class[coach_idx] ,
-                coach_name : obj.coach_name,
-                routes : results[0].routes,
-                seat : obj.seat ,
-                dimension: dimensions[coach_idx], //compart_Ment,col,row
-                seat_details : results[0].seat_details[coach_idx], //for each =========>[row,col,status,compartment]
-                routes : results[0].routes,
-                seat : obj.seat 
-            }
+        let l = results[0].routes.length ;
+        let times = queryUtils.timeDifference(new Date(results[0].routes[0].date),new Date(results[0].routes[l-1].date),results[0].routes[0].departure_time,results[0].routes[l-1].departure_time);
+        let train_result = {
+            schedule_id : results[0].schedule_id,
+            train_id : results[0].train_id,
+            train_uid : results[0].train_uid ,
+            routes : results[0].routes,
+            duration_hour :times.hours,
+            duration_minutes : times.minutes,
+            durations : times.durations,
+            departure_date : new Date(results[0].routes[0].date), 
+            departure_time : results[0].routes[0].time,
+            arrival_date :  new Date(results[0].routes[l-1].date),
+            arrival_time : results[0].routes[l-1].time,
+            cost_class : results[0].routes[l-1].cost_class[coach_idx] - results[0].routes[0].cost_class[coach_idx] ,
+            coach_name : obj.coach_name,
+            routes : results[0].routes,
+            seat : obj.seat ,
+            dimension: dimensions[coach_idx], //compart_Ment,col,row
+            seat_details : results[0].seat_details[coach_idx], //for each =========>[row,col,status,compartment]
+            routes : results[0].routes,
+            seat : obj.seat 
+        }
             // }
         // }
 

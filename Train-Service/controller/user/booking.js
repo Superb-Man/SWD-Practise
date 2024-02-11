@@ -25,7 +25,6 @@ const temporarySeatBooking = async (req, res) => {
             values : [obj.coach_name]
         }
         let coach_id = (await trainPool.query(query1)).rows[0].coach_id;
-        coach_id-=1 ;
     
         console.log(coach_id) ;
         console.log("temporarySeatBooking") ;
@@ -49,7 +48,7 @@ const temporarySeatBooking = async (req, res) => {
         }
         console.log(dimension,c_id)
         for(let i = 0 ; i < obj.booked_deatils.length ; i++) {
-            // console.log(dimension[1]*obj.booked_deatils[i][0]+obj.booked_deatils[i][1]) ;
+            //update two collumns
             const query2 = {
                 text : 'UPDATE "train_schedule_info" SET seat_details[$1][$2][$3] = $4 WHERE schedule_id = $5',
                 values : [c_id,dimension[1]*obj.booked_deatils[i][0]+obj.booked_deatils[i][1]+1,3,1,obj.schedule_id]
