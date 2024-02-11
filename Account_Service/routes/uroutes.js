@@ -9,8 +9,8 @@ const router = express.Router();
 // router.get('/getinfotest', bodyParser,userController.getInfo_test);
 //it will be deleted later!
 
-router.get('/signup', bodyParser,userController.userSignUp);
-router.get('/login', bodyParser,userController.userLogin);
+router.post('/signup', bodyParser,userController.userSignUp);
+router.post('/login', bodyParser,userController.userLogin);
 router.get('/passwordResetReq', bodyParser,userController.userPasswordResetReq);
 router.get('/updatePassword', bodyParser,userController.userUpdatePassword);
 
