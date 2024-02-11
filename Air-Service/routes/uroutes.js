@@ -19,7 +19,7 @@ router.get('/air/:from/:to/:date/person=:persons/:class?', bodyParser,usearchCon
 router.get('/seat_details/:from/:to/:date/person=:persons/:class/:flight_id', bodyParser,usearchController.getSeatAvailableByspecificFlight) ;
 
 
-router.get('/air/temp_booking/:from/:to/:date/person=:persons/:class/:flight_id', bodyParser,userBookingController.temporarySeatBooking) ;
+router.post('/air/temp_booking/:from/:to/:date/person=:persons/:class/:flight_id', bodyParser,userBookingController.temporarySeatBooking) ;
 
 
 
