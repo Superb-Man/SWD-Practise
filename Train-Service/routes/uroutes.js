@@ -16,7 +16,7 @@ const router = express.Router();
 // router.get('/train/flight_id:flight_id', bodyParser,usearchController.gettraininfoByFlightID) ;
 // router.get('/train/train_company=:train_company_name', bodyParser,usearchController.gettraininfoBytrainCompany) ;
 router.get('/train/:from/:to/:date/person=:persons/:coach?', bodyParser,usearchController.gettraininfo) ;
-// router.get('/seat_details/:from/:to/:date/person=:persons/:class/:flight_id', bodyParser,usearchController.getSeatAvailableByspecificFlight) ;
+router.get('/seat_details/:from/:to/:date/person=:persons/:coach/:train_uid', bodyParser,usearchController.getSeatAvailableByspecifictrain) ;
 
 
 router.get('/train/temp_booking/:from/:to/:date/person=:persons/:coach/:train_uid', bodyParser,userBookingController.temporarySeatBooking) ;

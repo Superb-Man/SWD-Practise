@@ -13,11 +13,22 @@ dotenv.config();
 //token check hobe
 const secret = process.env.secret;
 
-async function filter(from,to,date) {
-    const query1 = {
-        text : 'SELECT * FROM "train_schedule_info"',
-        values : []
+
+
+async function filter(from,to,date,train_uid = 'None') {
+    let query1 = {
+        text : 'None',
+        values :[]
     }
+    if(train_uid == 'None'){
+        query1.text = 'SELECT * FROM "train_schedule_info"' ;
+        query1.values = []
+    }
+    else{
+        query1.text = 'SELECT * FROM "train_schedule_info" WHERE train_uid = $1' ;
+        query1.values = [train_uid] ;
+    }
+
     let results = (await trainPool.query(query1)).rows;
     let res_objs = []
     for(let i = 0;i<results.length;i++){
@@ -163,7 +174,6 @@ const gettraininfo = async (req, res) => {
         //find all from train_schedule_info 
     
         let results = await filter(obj.from,obj.to,obj.date) ;
-        console.log(results);
         let trains = [] ;
 
         //find the dimensions of each train using query
@@ -202,7 +212,7 @@ const gettraininfo = async (req, res) => {
                         duration_hour :times.hours,
                         duration_minutes : times.minutes,
                         durations : times.durations,
-                        date : new Date(results[i].routes[0].date), 
+                        departure_date : new Date(results[i].routes[0].date), 
                         departure_time : results[i].routes[0].time,
                         arrival_date :  new Date(results[i].routes[l-1].date),
                         arrival_time : results[i].routes[l-1].time,
@@ -215,7 +225,6 @@ const gettraininfo = async (req, res) => {
                     break ;
                 }
             }
-            console.log(trains);
         }
 
 
@@ -257,58 +266,61 @@ const gettraininfo = async (req, res) => {
 //still doesnot need verification
 const getSeatAvailableByspecifictrain = async (req, res) => {
     try{
-        let obj = {from : req.params.from, to : req.params.to, date : req.params.date , seat : req.params.persons, class_name : req.params.class,train_uid : req.params.train_uid};
+        let obj = {from : req.params.from, to : req.params.to, date : req.params.date , seat : req.params.persons, coach_name : req.params.coach,train_uid : req.params.train_uid};
         console.log(obj);
-        let class_id = await searchCommon(obj) ;
+        let coach_id = await searchCommon(obj) ;
     
     
         //find all from train_schedule_info 
-        const query2 = {
-            text : 'SELECT * FROM "train_schedule_info" left join "train_services"on "train_schedule_info".train_id = "train_services".train_id WHERE from_port = $1 and to_port = $2 and date = $3 and train_uid = $4',
-            values : [obj.from,obj.to,obj.date,obj.train_uid]
-        }
     
-        let results = (await trainPool.query(query2)).rows;
+        let results = await filter(obj.from,obj.to,obj.date) ;
+        console.log(results) ;
 
         let query3 = {
-            text : 'SELECT dimensions,classes FROM "train_details" WHERE train_id = $1 and train_uid = $2',
-            values : [results[0].train_id,results[0].train_uid]
+            text : 'SELECT dimensions,coaches FROM "train_details" WHERE train_uid = $1',
+            values : [results[0].train_uid]
         }
         let dimension = -1 ;
-        let {dimensions,classes} = (await trainPool.query(query3)).rows[0] ;
-        for(let j = 0 ; j<classes.length;j++){
-            if(classes[j] == class_id){
-                class_id = j ;
+        let coach_idx = -1 ;
+        let {dimensions,coaches} = (await trainPool.query(query3)).rows[0] ;
+        for(let j = 0 ; j<coaches.length;j++){
+            if(coaches[j] == coach_id){
+                coach_idx = j ;
                 dimension = dimensions[j] ;
                 break ;
             }
         }
-        let ans = 0 ;
+        // console.log(dimension,coach_idx) ; 
+        // let ans = 0 ;
         // this loop is not mandatory. Still for safety, checking again   
         // for(let j = 0 ; j<dimensions[class_id][0] * dimensions[class_id][1];j++){
         //     if(results[i].seat_details[class_id][j][2] == 0) {
         //         ans+=1;
         //     }
         //     if(ans>=obj.seat){
-            let times = queryUtils.timeDifference(results[0].date,results[0].arrival_date,results[0].departure_time,results[0].arrival_time);
-                let train_result = {
-                    schedule_id : results[0].schedule_id,
-                    train_uid : results[0].train_uid ,
-                    from_Port : obj.from,
-                    to_Port : obj.to,
-                    duration_hour :times.hours,
-                    duration_minutes : times.minutes,
-                    date : results[0].date.toLocaleDateString(), 
-                    departure_time : results[0].departure_time,
-                    arrival_date :  results[0].arrival_date.toLocaleDateString(),
-                    arrival_time : results[0].arrival_time,
-                    cost_class : results[0].cost_class[class_id],
-                    class_name : obj.class_name,
-                    dimension: dimensions[class_id], //row-column
-                    seat_details : results[0].seat_details[class_id],
-                    routes : results[0].routes,
-                    seat : obj.seat 
-                }
+            let l = results[0].routes.length ;
+            let times = queryUtils.timeDifference(new Date(results[0].routes[0].date),new Date(results[0].routes[l-1].date),results[0].routes[0].departure_time,results[0].routes[l-1].departure_time);
+            let train_result = {
+                schedule_id : results[0].schedule_id,
+                train_id : results[0].train_id,
+                train_uid : results[0].train_uid ,
+                routes : results[0].routes,
+                duration_hour :times.hours,
+                duration_minutes : times.minutes,
+                durations : times.durations,
+                departure_date : new Date(results[0].routes[0].date), 
+                departure_time : results[0].routes[0].time,
+                arrival_date :  new Date(results[0].routes[l-1].date),
+                arrival_time : results[0].routes[l-1].time,
+                cost_class : results[0].routes[l-1].cost_class[coach_idx] - results[0].routes[0].cost_class[coach_idx] ,
+                coach_name : obj.coach_name,
+                routes : results[0].routes,
+                seat : obj.seat ,
+                dimension: dimensions[coach_idx], //compart_Ment,col,row
+                seat_details : results[0].seat_details[coach_idx], //for each =========>[row,col,status,compartment]
+                routes : results[0].routes,
+                seat : obj.seat 
+            }
             // }
         // }
 
