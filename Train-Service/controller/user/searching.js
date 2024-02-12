@@ -14,6 +14,39 @@ dotenv.config();
 const secret = process.env.secret;
 
 
+//post
+const getAllroutesDetailsByTrainUid = async(req,res)  => {
+    //let {train_uid, schedule_id} = req.body ;
+
+    let train_uid ='Agnibina-735' ;
+    let schedule_id = 2 ;
+    try{
+    
+        let query1 = { 
+
+            text : 'SELECT train_uid , routes FROM "train_schedule_info" WHERE train_uid = $1 AND schedule_id = $2',
+            values : [ train_uid, schedule_id ]
+
+        }
+
+    
+        
+        let results = (await trainPool.query(query1)).rows;
+
+        res.status(200).json(results) ;
+
+    }
+
+    catch(err){
+        console.log(err);
+        res.status(500).json({message: "Internal Server Error"});
+        
+
+    }
+
+
+
+}
 
 async function filter(from,to,date,train_uid = 'None') {
     let query1 = {
@@ -29,7 +62,7 @@ async function filter(from,to,date,train_uid = 'None') {
         query1.values = [train_uid] ;
     }
 
-    let results = (await trainPool.query(query1)).rows;
+    let results = (await trainPool.query(query1)).rows; 
     let res_objs = []
     for(let i = 0;i<results.length;i++){
         let res_obj = {
@@ -334,4 +367,5 @@ module.exports = { gettraininfo,
                     gettraininfoBytrainID,
                     getSeatAvailableByspecifictrain,
                     gettraininfoBytrainCompany,
+                    getAllroutesDetailsByTrainUid,
                 };    
