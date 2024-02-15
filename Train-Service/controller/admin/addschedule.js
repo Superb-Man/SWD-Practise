@@ -2,7 +2,7 @@ const dotenv = require('dotenv');
 const crypt = require('crypto-js');
 const jwt = require('jsonwebtoken');
 const accountPool = require('../../config/accountDB.js');
-const trainPool = require('../../config/trainDB.js');
+const server = require('../../config/trainDB.js');
 const crypto = require('../../utils.js');
 const { query } = require('express');
 
@@ -10,6 +10,8 @@ dotenv.config();
 //token check hobe
 const secret = process.env.secret;
 
+const trainPool = server.trainPool ;
+const trainPool2 = server.trainPool2 ;
 
 const add_train_company = async (req, res) => {
     try {
