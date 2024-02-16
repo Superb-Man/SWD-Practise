@@ -111,10 +111,33 @@ const deleteRoutes = async (req, res) => {
     }   
 }
 
+
+//req.params.train_uid = "Lara-62"
+const getRoutes = async (req, res) => {
+    // req.params.train_uid = "Agnibina-735" ;
+    console.log(req.params.train_uid);
+    try{
+        let {data,error} = await trainPool2.from('routes_table')
+                                          .select('routes')
+                                          .eq('train_uid', req.params.train_uid)
+        if(error){
+            throw error;
+        }
+        //routes can be multiple
+        res.status(200).json(data);
+    }catch(err){
+        console.log(err);
+        res.status(500).json({message: "Internal Server Error"});
+    }   
+}
+
+
+
 module.exports = {
     updateRoutes,
     addRoutes,
-    deleteRoutes
+    deleteRoutes,
+    getRoutes
 
 }
 

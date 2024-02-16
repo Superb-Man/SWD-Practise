@@ -357,8 +357,6 @@ const getSeatAvailableByspecifictrain = async (req, res) => {
     }
 }
 
-// const seatAvailable()
-
 
 
 module.exports = { gettraininfo,

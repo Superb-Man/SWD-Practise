@@ -8,13 +8,23 @@ const router = express.Router();
 
 
 //admin
-router.get('/addschedule', bodyParser,scheduleController.addschedule) ;
-router.get('/routes/update', bodyParser,routeController.updateRoutes) ;
-router.get('/routes/add', bodyParser,routeController.addRoutes) ;
-router.get('/deleteRoutes', bodyParser,routeController.deleteRoutes) ;
-router.get('/train/addTrain', bodyParser,trainController.addTrain) ;
-router.get('/train/addTrainCompany', bodyParser,trainController.addTrainCompany) ;
-router.get('/train/addDetails', bodyParser,trainController.addDetails) ;
+//POST+DELETE+PUT request
+router.get('/addschedule', bodyParser,scheduleController.addschedule) ; //tested
+router.get('/routes/update', bodyParser,routeController.updateRoutes) ; //tested
+router.get('/routes/add', bodyParser,routeController.addRoutes) ;//tested
+router.get('/deleteRoutes', bodyParser,routeController.deleteRoutes) ; //tested
+router.get('/train/addTrain', bodyParser,trainController.addTrain) ; //tested
+router.get('/train/addTrainCompany', bodyParser,trainController.addTrainCompany) ; //tested
+router.get('/train/addDetails', bodyParser,trainController.addDetails) ; //tested
+
+
+//GET request
+router.get('/train/getRoutes/:train_uid', bodyParser,routeController.getRoutes) ; //tested
+router.get('/train/getAllTrainsByCompanyName/:company_name', bodyParser,trainController.getAllTrainsByCompanyName) ; //tested
+router.get('/train/getAllCoachesDetails/:train_uid', bodyParser,trainController.getAllCoachesDetails) ; //tested
+router.get('/train/getSeatAvailabe/:train_uid/:coach_name/:schedule_id', bodyParser,scheduleController.getSeatAvailableBySchedule) ;
+
+
 
 
 module.exports = router;
