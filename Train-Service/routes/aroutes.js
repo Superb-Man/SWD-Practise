@@ -9,20 +9,28 @@ const router = express.Router();
 
 //admin
 //POST+DELETE+PUT request
-router.get('/addschedule', bodyParser,scheduleController.addschedule) ; //tested
-router.get('/routes/update', bodyParser,routeController.updateRoutes) ; //tested
-router.get('/routes/add', bodyParser,routeController.addRoutes) ;//tested
-router.get('/deleteRoutes', bodyParser,routeController.deleteRoutes) ; //tested
-router.get('/train/addTrain', bodyParser,trainController.addTrain) ; //tested
-router.get('/train/addTrainCompany', bodyParser,trainController.addTrainCompany) ; //tested
-router.get('/train/addDetails', bodyParser,trainController.addDetails) ; //tested
+router.post('/addschedule', bodyParser,scheduleController.addschedule) ; //tested
+router.post('/routes/update', bodyParser,routeController.updateRoutes) ; //tested
+router.post('/routes/add', bodyParser,routeController.addRoutes) ;//tested
+router.post('/deleteRoutes', bodyParser,routeController.deleteRoutes) ; //tested
+router.post('/train/addTrain', bodyParser,trainController.addTrain) ; //tested
+router.post('/train/addTrainCompany', bodyParser,trainController.addTrainCompany) ; //tested
+router.post('/train/addDetails', bodyParser,trainController.addDetails) ; //tested
+//updateSchedule ->sending mails,
+//booking
+//setBookingStatusByCoach
+
+
 
 
 //GET request
+//get most recent 10 schedules of train_company
+router.get('/train/getRecentSchedules/:train_company', bodyParser,scheduleController.getRecentSchedules) ; //Not-tested
 router.get('/train/getRoutes/:train_uid', bodyParser,routeController.getRoutes) ; //tested
 router.get('/train/getAllTrainsByCompanyName/:company_name', bodyParser,trainController.getAllTrainsByCompanyName) ; //tested
 router.get('/train/getAllCoachesDetails/:train_uid', bodyParser,trainController.getAllCoachesDetails) ; //tested
 router.get('/train/getSeatAvailabe/:train_uid/:coach_name/:schedule_id', bodyParser,scheduleController.getSeatAvailableBySchedule) ;
+router.get('/train/test', bodyParser,trainController.redirect) ; //tested
 
 
 

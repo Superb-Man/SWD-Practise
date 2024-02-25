@@ -118,13 +118,13 @@ const getRoutes = async (req, res) => {
     console.log(req.params.train_uid);
     try{
         let {data,error} = await trainPool2.from('routes_table')
-                                          .select('routes')
+                                          .select('routes,id')
                                           .eq('train_uid', req.params.train_uid)
         if(error){
             throw error;
         }
         //routes can be multiple
-        res.status(200).json(data);
+        res.status(200).json(data[0]);
     }catch(err){
         console.log(err);
         res.status(500).json({message: "Internal Server Error"});
