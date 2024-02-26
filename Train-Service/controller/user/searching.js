@@ -14,6 +14,9 @@ dotenv.config();
 const secret = process.env.secret;
 const trainPool = server.trainPool
 
+const trainPool = server.trainPool ;
+const trainPool2 = server.trainPool2 ;
+
 
 //post
 const getAllroutesDetailsByTrainUid = async(req,res)  => {

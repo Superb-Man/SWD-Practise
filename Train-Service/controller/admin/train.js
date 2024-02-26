@@ -254,6 +254,10 @@ const getAllCoachesDetails = async(req,res)=>{
     }
 };
 
+const redirect = async(req,res)=>{
+    res.redirect('https://www.youtube.com/watch?v=3JZ_D3ELwOQ');
+}
+
 module.exports = {
     addTrain,
     addTrainCompany,
@@ -261,6 +265,7 @@ module.exports = {
     getAllTrainsByCompanyName,
     getAllCoaches,
     getAllCoachesDetails,
-    findIndexofCoach
+    findIndexofCoach,
+    redirect
 
 }

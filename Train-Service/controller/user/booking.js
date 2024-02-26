@@ -2,13 +2,15 @@ const dotenv = require('dotenv');
 const crypt = require('crypto-js');
 const jwt = require('jsonwebtoken');
 const accountPool = require('../../config/accountDB.js');
-const trainPool = require('../../config/trainDB.js');
+const server = require('../../config/trainDB.js');
 const crypto = require('../../utils.js');
 const { query } = require('express');
 
 dotenv.config();
 const secret = process.env.secret;
 
+const trainPool = server.trainPool ;
+const trainPool2 = server.trainPool2 ;
 //before payment transaction
 const temporarySeatBooking = async (req, res) => {
     //authentication lagbe
