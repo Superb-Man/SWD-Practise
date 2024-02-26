@@ -215,12 +215,7 @@ async function mapCoaches(coaches){
 
 }
 const addDetails = async(req,res)=>{
-    req.body = {
-        train_uid: "Lara104",
-        coaches : ["SHOVAN","SHULAV","AC_S"],
-        dimensions : [[2,4,2],[2,3,2],[2,3,2]],
-    }
-
+    console.log(req.body);
     try{
         coaches = await mapCoaches(req.body.coaches);
         // res.status(200).json(coaches);
@@ -247,6 +242,7 @@ const getAllTrainsByCompanyName = async(req,res)=>{
             values : [req.params.company_name]
         }
         const data = (await trainPool.query(query1)).rows ;
+        console.log(data)
         res.status(200).json(data);
     }catch(err){
         console.log(err);

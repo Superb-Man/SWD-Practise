@@ -123,6 +123,10 @@ const getRoutes = async (req, res) => {
         if(error){
             throw error;
         }
+        if(data.length == 0){
+            res.status(404).json({message: "No routes found"});
+            return;
+        }
         //routes can be multiple
         res.status(200).json(data[0]);
     }catch(err){
