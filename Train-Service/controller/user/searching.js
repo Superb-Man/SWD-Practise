@@ -12,7 +12,7 @@ const queryUtils = require('../user/queryUtils.js')
 dotenv.config();
 //token check hobe
 const secret = process.env.secret;
-const trainPool = server.trainPool
+
 
 const trainPool = server.trainPool ;
 const trainPool2 = server.trainPool2 ;
