@@ -87,7 +87,8 @@ async function getAllCoaches(train_uid){
 
 async function findIndexofCoach(train_uid,coach_name){
     try{
-        const {data,error} = await trainPool2
+        console.log(coach_name)
+        let {data,error} = await trainPool2
                             .from('coach_info')
                             .select('coach_id')
                             .eq('coach_name',coach_name)
@@ -95,18 +96,24 @@ async function findIndexofCoach(train_uid,coach_name){
             throw error;
         }
         data = data[0] ;
-        const {data2,error2} = await trainPool2
-                            .from('train_details')
-                            .select('coaches,dimensions')
-                            .eq('train_uid',train_uid)
-        if(error2){
-            throw error2;
+        console.log(train_uid) ;
+        //write a query to find the data of the train_uid in train details just the coaches and dimensions
+        // let {data2,error2} = await trainPool2
+        //                     .from('train_details')
+        //                     .select('dimensions,coaches')
+        //                     .eq('train_uid',train_uid) ;
+
+        const query1  = {
+            text : 'SELECT dimensions,coaches FROM train_details WHERE train_uid = $1',
+            values : [train_uid]
         }
-        data2 = data2[0] ;
+        const data2 = (await trainPool.query(query1)).rows[0] ;
+        // data2 = data2[0] ;
         let obj = {
             dimensions : [] ,
             idx : -1
         }
+        console.log(data2);
         for(let i = 0 ; i < data2.coaches.length ; i++){
             if(data2.coaches[i] == data.coach_id){
                 //0 index
@@ -187,13 +194,36 @@ const addTrain = async(req,res)=>{
 //     coaches : [1,2,3,4],
 //     dimensions : [[2,3,2],[2,3,2],[2,3,2],[2,3,2]],
 // }
+
+
+async function mapCoaches(coaches){
+    console.log(coaches);
+    //map the coaches from coach_info
+    for(let i = 0 ; i < coaches.length ; i++){
+        const query1 = {
+            text : 'SELECT "coach_id" FROM "coach_info" WHERE "coach_name" = $1',
+            values : [coaches[i]]
+        }
+        const data = (await trainPool.query(query1)).rows[0] ;
+        coaches[i] = parseInt(data.coach_id) ;
+    
+    }
+    console.log(coaches);
+
+    return coaches ;
+
+
+}
 const addDetails = async(req,res)=>{
     req.body = {
-        train_uid: "Lara-104",
-        coaches : [1,2,3],
-        dimensions : [[2,3,2],[2,3,2],[2,3,2]],
+        train_uid: "Lara104",
+        coaches : ["SHOVAN","SHULAV","AC_S"],
+        dimensions : [[2,4,2],[2,3,2],[2,3,2]],
     }
+
     try{
+        coaches = await mapCoaches(req.body.coaches);
+        // res.status(200).json(coaches);
         let {error} = await trainPool2
                             .from('train_details')
                             .update({coaches : req.body.coaches, dimensions : req.body.dimensions})
@@ -254,6 +284,17 @@ const getAllCoachesDetails = async(req,res)=>{
     }
 };
 
+const getCoachDetails = async(req,res)=>{
+    try{
+        const data = await findIndexofCoach(req.params.train_uid,req.params.coach_name) ;
+        console.log(data) ;
+        res.status(200).json(data);
+    }catch(err){
+        console.log(err);
+        res.status(500).json({message: "Internal Server Error"});
+    }
+};
+
 const redirect = async(req,res)=>{
     res.redirect('https://www.youtube.com/watch?v=3JZ_D3ELwOQ');
 }
@@ -266,6 +307,7 @@ module.exports = {
     getAllCoaches,
     getAllCoachesDetails,
     findIndexofCoach,
-    redirect
+    redirect,
+    getCoachDetails
 
 }

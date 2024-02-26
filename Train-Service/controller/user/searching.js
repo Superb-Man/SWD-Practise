@@ -13,17 +13,16 @@ dotenv.config();
 //token check hobe
 const secret = process.env.secret;
 
-
 const trainPool = server.trainPool ;
 const trainPool2 = server.trainPool2 ;
 
 
 //post
 const getAllroutesDetailsByTrainUid = async(req,res)  => {
-    let {train_uid, schedule_id} = req.body ;
+    //let {train_uid, schedule_id} = req.body ;
 
-    //let train_uid ='Agnibina-735' ;
-    //let schedule_id = 2 ;
+    let train_uid ='Agnibina-735' ;
+    let schedule_id = 2 ;
     try{
     
         let query1 = { 

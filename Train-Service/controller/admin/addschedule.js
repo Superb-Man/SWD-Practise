@@ -6,6 +6,7 @@ const server = require('../../config/trainDB.js');
 const crypto = require('../../utils.js');
 const { query } = require('express');
 const utils = require('../admin/train.js');
+const mail  = require('./mail.js');
 
 dotenv.config();
 //token check hobe
@@ -162,5 +163,41 @@ const getSeatAvailableBySchedule = async (req, res) => {
     }
 }
 
+const updateSchedule = async(req,res) => {
+    try{
+        req.body.schedule_id = 1 ;
+        req.body.subject = "Train Schedule Update" ;
+        req.body.message = req.params.train_uid + " Delayed for 1 hour" ;
+        let toList = [] ;
+        //at first find the user,schedule_id,ticket_id from schedule_info table with info using schedule_id
+        const query1 = {
+            text : `SELECT "info".username,"info".schedule_id,"info".ticket_id,"info".start_details , "info".end_details from 
+                    "info" JOIN "train_schedule_info" as 
+                    "schedule" ON "info".schedule_id = "schedule".schedule_id WHERE "info".schedule_id = $1`,
+            values : [req.body.schedule_id]
+        }
+        const results = (await trainPool.query(query1)).rows ;
+        //join on AccountDB to get user_email
+        for(let i = 0;i<results.length;i++){
+            const query2 = {
+                text : 'SELECT email from "clients" WHERE username = $1',
+                values : [results[i].username] ,
+            }
+            const email = (await accountPool.query(query2)).rows[0];
+            console.log(email);
+            to = 'kaziistiak253@gmail.com'
+            // start_details have start,time,date
+            req.body.message +="\nPrevious schedule :\n" + results[i].start_details.start +" to "+ results[i].end_details.start +"\n";
+            req.body.message+="Time : "+results[i].start_details.time +"\nDate : "+ results[i].start_details.date ;
+            await mail.mailing(to,req.body.subject,req.body.message);
+        }
 
-module.exports = {addschedule,getSeatAvailableBySchedule };
+    }catch(err) {
+        console.log(err);
+        res.status(500).json({message: "Internal Server Error"});
+    
+    }
+} ;
+
+
+module.exports = {addschedule,getSeatAvailableBySchedule,updateSchedule};
