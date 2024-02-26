@@ -89,6 +89,22 @@ const temporarySeatBooking = async (req, res) => {
 
 };
 
+const bookSuccess = async(req,res) => {
+    try{
+        //insert into the info table
+        const query1 = {
+            //colmns = schedule_id,ticket_id,user_id,seat_booked,seat_booked_string,start_details,end_details
+            text : 'INSERT INTO "info" (schedule_id,user_id,seat_booked,seat_booked_string,start_details,end_details,coach_name) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+            values : [req.body.schedule_id,req.body.user_id,req.body.seat_booked,req.body.seat_booked_string,req.body.start_details,req.body.end_details,coach_name]
+        }
+        await trainPool.query(query1) ;
+
+    }catch(err) {
+
+    }
+}
+
 module.exports = {
     temporarySeatBooking,
 }
+
