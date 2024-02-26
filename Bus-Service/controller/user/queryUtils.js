@@ -13,6 +13,23 @@ function earlyDeparture(buslist){
     return buslist ;
 }
 
+function availSeat(buslist){
+    buslist.sort((a, b) => {
+        // Using localeCompare to compare strings lexicographically
+        return b.availableSeats-a.availableSeats;
+    });
+
+    return buslist ;
+}
+
+function findCheapestBus(buslist){
+
+    buslist.sort((a,b)=>(a.cost-b.cost));
+
+    return buslist;
+
+}
+
 
 // function timeDifference(date1,date2,time1,time2){
 //     date1 = new Date(date1);
@@ -48,6 +65,8 @@ function earlyDeparture(buslist){
 // }
 
  module.exports = { earlyDeparture,
+                    availSeat,
+                    findCheapestBus
 //                    findShortestRoutes,
 //                      timeDifference
                  } ;

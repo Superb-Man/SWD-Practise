@@ -2,15 +2,16 @@ const dotenv = require('dotenv');
 const crypt = require('crypto-js');
 const jwt = require('jsonwebtoken');
 const accountPool = require('../../config/accountDB.js');
-const busPool = require('../../config/busDB.js');
+const server = require('../../config/busDB.js');
 const crypto = require('../../utils.js');
 const { query } = require('express');
 
 dotenv.config();
 const secret = process.env.secret;
+const busPool = server.busPool
 
 // //before payment transaction
-// const temporarySeatBooking = async (req, res) => {
+ const seatBooking = async (req, res) => {
 //     //authentication lagbe
 //     // req.body.user_name = 'X-33' ;
 //     // req.body.schedule_id = 1 ;
@@ -18,9 +19,9 @@ const secret = process.env.secret;
 //     // req.body.booked_deatils = [[0,0,1,0],[0,1,1,0],[0,2,1,0]];
 //     // obj = req.body ;
 
-//     obj = req.body ;
+     obj = req.body ;
 
-//     console.log(obj)
+     console.log(obj)
 
 //     //transaction starting
 
@@ -37,21 +38,21 @@ const secret = process.env.secret;
 
 
 //         //transaction starting
-//         try{
-//             trainPool.query('BEGIN') ;
-//             const query1 = {
-//                 text : 'SELECT coach_id FROM "coach_info" WHERE coach_name = $1',
-//                 values : [obj.coach_name]
-//             }
-//             let coach_id = (await trainPool.query(query1)).rows[0].coach_id;
+         try{
+             busPool.query('BEGIN') ;
+            //  const query1 = {
+            //     text : 'SELECT bus_id FROM "bus_details" WHERE coach_name = $1',
+            //     values : [obj.coach_name]
+            //  }
+            // let coach_id = (await trainPool.query(query1)).rows[0].coach_id;
         
 //             console.log(coach_id) ;
 //             console.log("temporarySeatBooking") ;
 //             console.log(obj) ;
-//             const dimension_query = {
-//                 text : 'SELECT "train_details".dimensions,"train_details".coaches FROM "train_details" JOIN "train_schedule_info" ON "train_schedule_info".train_uid = "train_details".train_uid  WHERE schedule_id = $1',
-//                 values : [obj.schedule_id]
-//             }
+            const dimension_query = {
+                text : 'SELECT "bus_details".dimensions,"bus_details".last_middle FROM "bus_details" JOIN "bus_schedule_info" ON "bus_schedule_info".bus_name = "bus_details".bus_name  WHERE schedule_id = $1',
+                values : [obj.schedule_id]
+            }
 
 //             let dimension = -1 ;
 //             let c_id = -1 ;
@@ -78,15 +79,15 @@ const secret = process.env.secret;
 //             res.status(200).json({message: "Seat Booked"}) ;
 
 
-//         }catch(err) {
-//             await trainPool.query('ROLLBACK') ;
-//             console.log(err) ;
-//             res.status(500).json({message: "Internal Server Error"}) ;
-//         }
+        }catch(err) {
+            await busPool.query('ROLLBACK') ;
+            console.log(err) ;
+            res.status(500).json({message: "Internal Server Error"}) ;
+        }
 //     })
 
-// };
+ };
 
-// module.exports = {
-//     temporarySeatBooking,
-// }
+module.exports = {
+    seatBooking,
+}

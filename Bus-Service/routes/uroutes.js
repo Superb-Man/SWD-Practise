@@ -19,7 +19,7 @@ const router = express.Router();
 //I have to start from here --- Kuljit
 // router.get('/train/route_details',bodyParser,usearchController.getAllroutesDetailsByTrainUid) ;
 router.post('/bus/:from/:to/:date/:category?', bodyParser,usearchController.getbusinfo) ;
-// router.get('/seat_details/:from/:to/:date/person=:persons/:coach/:train_uid', bodyParser,usearchController.getSeatAvailableByspecifictrain) ;
+router.post('/seat_details/:from/:to/:date/:category', bodyParser,usearchController.getSeatAvailableByspecificbus) ;
 
 
 // router.get('/train/temp_booking/:from/:to/:date/person=:persons/:coach/:train_uid', bodyParser,userBookingController.temporarySeatBooking) ;

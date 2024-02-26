@@ -88,7 +88,7 @@ const addschedule = async (req, res) => {
         let obj = {"schedule_id":req.body.schedule_id,"bus_id":req.body.bus_id,"bus_name":req.body.bus_name,"boarding":req.body.boarding,"departure_date":req.body.departure_date,"dropping":req.body.dropping, "cost": req.body.cost, "source": req.body.source, "destination": req.body.destination};
         
         const query1 = {
-            text : 'SELECT dimension,category from "bus_details" WHERE bus_id = $1 and bus_name = $2',
+            text : 'SELECT dimension,category,last_middle from "bus_details" WHERE bus_id = $1 and bus_name = $2',
             values : [obj.bus_id,obj.bus_name]
         }
 
@@ -114,6 +114,8 @@ const addschedule = async (req, res) => {
         
         
         let seat_details = [];
+
+        if(last_middle == 1) seat_details.push([-1,-1,0])
         
         for(let j = 0;j<result1.dimension[0];j++){
             for(let k = 0;k<result1.dimension[1];k++){
