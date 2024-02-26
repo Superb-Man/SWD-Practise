@@ -12,11 +12,12 @@ const router = express.Router();
 router.post('/addschedule', bodyParser,scheduleController.addschedule) ; //tested
 router.post('/routes/update', bodyParser,routeController.updateRoutes) ; //tested
 router.post('/routes/add', bodyParser,routeController.addRoutes) ;//tested
-router.post('/deleteRoutes', bodyParser,routeController.deleteRoutes) ; //tested
+router.post('/routes/deleteRoutes', bodyParser,routeController.deleteRoutes) ; //tested
 router.post('/train/addTrain', bodyParser,trainController.addTrain) ; //tested
 router.post('/train/addTrainCompany', bodyParser,trainController.addTrainCompany) ; //tested
 router.post('/train/addDetails', bodyParser,trainController.addDetails) ; //tested
 router.post('/train/:train_uid/updateSchedule', bodyParser,scheduleController.updateSchedule) ; //tested
+router.post('/train/getInfoBySchedule', bodyParser,scheduleController.getSeatInfoBySchedule) ; //tested
 //booking
 //setBookingStatusByCoach
 
@@ -32,6 +33,8 @@ router.get('/train/getAllCoaches/:train_uid', bodyParser,trainController.getAllC
 router.get('/train/getCoachDetails/:train_uid/:coach_name', bodyParser,trainController.getCoachDetails) ; //tested
 router.get('/train/getSeatAvailabe/:train_uid/:coach_name/:schedule_id', bodyParser,scheduleController.getSeatAvailableBySchedule) ;
 router.get('/train/test', bodyParser,trainController.redirect) ; //tested
+router.get('/train/getSchedule/:train_uid', bodyParser,scheduleController.getScheduleByUID) ; //-tested
+
 
 
 

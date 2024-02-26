@@ -7,6 +7,7 @@ const crypto = require('../../utils.js');
 const { query } = require('express');
 const utils = require('../admin/train.js');
 const mail  = require('./mail.js');
+const queryUtils = require('../user/queryUtils.js');
 
 dotenv.config();
 //token check hobe
@@ -199,5 +200,89 @@ const updateSchedule = async(req,res) => {
     }
 } ;
 
+const getScheduleByUID = async (req, res) => {
+    try{
+        req.params.train_uid = 'Agnibina-735';
+        //select all from train_schedule_info
+        const query1 = {
+            text : 'SELECT * from "train_schedule_info" WHERE train_uid = $1',
+            values : [req.params.train_uid]
+        }
 
-module.exports = {addschedule,getSeatAvailableBySchedule,updateSchedule};
+        const results = (await trainPool.query(query1)).rows ;
+        let train_results = [] ;
+
+        for(let i = 0;i<results.length;i++){
+            let l = results[0].routes.length ;
+            let times = queryUtils.timeDifference(new Date(results[0].routes[0].date),new Date(results[0].routes[l-1].date),results[0].routes[0].departure_time,results[0].routes[l-1].departure_time);
+            let train_result = {
+                schedule_id : results[i].schedule_id,
+                train_id : results[i].train_id,
+                train_uid : results[i].train_uid ,
+                routes : results[i].routes,
+                duration_hour :times.hours,
+                duration_minutes : times.minutes,
+                durations : times.durations,
+                departure_date : new Date(results[0].routes[0].date), 
+                departure_time : results[0].routes[0].time,
+                arrival_date :  new Date(results[0].routes[l-1].date),
+                arrival_time : results[0].routes[l-1].time,
+                routes : results[i].routes,
+            }
+            train_results.push(train_result) ;
+        }
+        res.status(200).json(train_results);
+
+    }catch (err){
+        console.log(err);
+        res.status(500).json({message: "Internal Server Error"});
+    }
+
+}
+
+const getSeatInfoBySchedule = async (req, res) => {
+    try{
+        console.log("here") ;
+        req.body.schedule_id = 1 ;
+        req.body.train_uid = "Agnibina-735" ;
+        //join three tables train_schedule_info,train_details,coach_info
+        //join coach_info to find coachName too
+        const query1 = {
+            text : `SELECT "schedule".schedule_id,"schedule".train_uid,"schedule".seat_details,"details".dimensions,"details".coaches
+                    FROM "train_schedule_info" as "schedule" JOIN "train_details" as "details" ON "schedule".train_uid = "details".train_uid
+                    WHERE "schedule".schedule_id = $1 and "schedule".train_uid = $2`,
+            values : [req.body.schedule_id,req.body.train_uid]
+        }
+        let results = (await trainPool.query(query1)).rows[0] ;
+        let coaches_details = await utils.getAllCoaches(req.body.train_uid) ;
+        // console.log(coaches_details);
+        // console.log(results) ;
+
+        //count the number of each coaches whose tickets are still availabale
+        let ticketAvailable = [] ;
+        for(let i = 0 ; i < results.coaches.length ; i++){
+            let tickets = 0 ;
+            // console.log(results.seat_details[i].length)
+            for(let j = 0 ; j < coaches_details.dimensions[i][0]*coaches_details.dimensions[i][1] * coaches_details.dimensions[i][2] ; j++){
+                // console.log(results.seat_details[i][j]);
+                if(results.seat_details[i][j][2] === 0){
+                    tickets++ ;
+                }
+            }
+            ticketAvailable.push(tickets) ;
+        }
+        // map coach_NAME, TICKET available into coaches 
+        let coach_details = coaches_details.coaches.map((value,index) => {
+            return { coach: value, available: ticketAvailable[index], seat_details: results.seat_details[index],dimensions: results.dimensions[index]};
+        });
+        res.status(200).json(coach_details);
+        // const coaches = await utils.getAllCoaches(req.body.train_uid);
+        // res.status(200).json(results);
+    }catch(err){
+        console.log(err);
+        res.status(500).json({message: "Internal Server Error"});
+    }
+}
+
+
+module.exports = {addschedule,getSeatAvailableBySchedule,updateSchedule,getScheduleByUID,getSeatInfoBySchedule};

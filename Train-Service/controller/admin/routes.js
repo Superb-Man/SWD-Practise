@@ -58,30 +58,7 @@ const addRoutes = async (req, res) => {
 }
 
 const updateRoutes = async (req, res) => {
-    req.body.id = 1;
-    req.body.routes = [
-        {
-          "start": "Rajshahi",
-          "departure_time": "10:00:00",
-          "cost_class": [
-            100,
-            200,
-            350,
-            375
-          ]
-        },
-        {
-          "start": "NarayanGanj",
-          "departure_time": "11:00:00",
-          "cost_class": [
-            120,
-            220,
-            370,
-            400
-          ]
-        }
-    ]
-
+    console.log(req.body);
     try{
         let {error} = await trainPool2.from('routes_table')
                                           .update({routes: req.body.routes}) 
