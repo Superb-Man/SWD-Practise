@@ -1,0 +1,27 @@
+{
+  "name": "account-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.6",
+    "amqplib": "^0.10.3",
+    "axios": "^1.4.0",
+    "cors": "^2.8.5",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.1",
+    "pg": "^8.11.2",
+    "nodemailer": "^6.9.5"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.10.9"
+  }
+}
