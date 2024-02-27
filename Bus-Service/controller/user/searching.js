@@ -356,10 +356,10 @@ const getbusinfo = async (req, res) => {
 //         //     trains = queryUtils.queryBytime(trains,(obj.hour*60+obj.minutes)*60) ;
 //         // }
 
-//         if(trains.length == 0){
-//             res.status(404).json({message: "No trains found"});
-//             return ;
-//         }
+        if(buslist.length == 0){
+            res.status(404).json({message: "No Buses found"});
+            return ;
+        }
 
             
 

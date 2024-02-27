@@ -34,14 +34,14 @@ const addschedule = async (req, res) => {
             
             {
                 checkpoint : "Jonopoth Mour 1",
-                timestamp : "21:30:00",
+                counter : "21:30:00",
                 // departure_date : new Date("2024-02-01"),
                 //cost_class: [130,200,350,420],
             },
 
             {
                 checkpoint : "Dholaipar 2",
-                timestamp : "21:45:00",
+                counter : "21:45:00",
                 // departure_date : new Date("2024-02-01"),
                 //cost_class: [130,200,350,420],
             },
@@ -63,7 +63,7 @@ const addschedule = async (req, res) => {
 
             {
                 checkpoint : "Royal More",
-                timestamp : "1:40:00",
+                counter : "1:40:00",
             },
 
             
