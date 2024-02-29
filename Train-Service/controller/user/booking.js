@@ -19,8 +19,7 @@ const temporarySeatBooking = async (req, res) => {
     // req.body.coach_name = 'AC_S' ;
     // req.body.booked_deatils = [[0,0,1,0],[0,1,1,0],[0,2,1,0]];
     // obj = req.body ;
-
-    obj = req.body ;
+    let obj = req.body ;
 
     console.log(obj)
 
@@ -68,14 +67,21 @@ const temporarySeatBooking = async (req, res) => {
                 }
             }
             console.log(dimension,c_id)
-            for(let i = 0 ; i < obj.booked_deatils.length ; i++) {
+            console.log(obj.booked_details.length)
+            for(let i = 0 ; i < obj.booked_details.length ; i++) {
                 //update two collumns
                 const query2 = {
                     text : 'UPDATE "train_schedule_info" SET seat_details[$1][$2][$3] = $4 WHERE schedule_id = $5',
-                    values : [c_id,dimension[1]*obj.booked_deatils[i][0]+obj.booked_deatils[i][1]+1,3,1,obj.schedule_id]
+                    values : [c_id,dimension[1]*obj.booked_details[i][0]+obj.booked_details[i][1]+1,3,1,obj.schedule_id]
                 }
                 await trainPool.query(query2) ;
             }
+            const query2 = {
+                //colmns = schedule_id,ticket_id,user_id,seat_booked,seat_booked_string,start_details,end_details
+                text : 'INSERT INTO "info" (schedule_id,username,seat_booked,seat_booked_string,details,coach_name) VALUES ($1,$2,$3,$4,$5,$6)',
+                values : [obj.schedule_id,obj.user_nmae,obj.seat_booked,obj.seat_booked_string,obj.details,obj.coach_name]
+            }
+            await trainPool.query(query2) ;
             await trainPool.query('COMMIT') ;
             res.status(200).json({message: "Seat Booked"}) ;
 
@@ -89,20 +95,20 @@ const temporarySeatBooking = async (req, res) => {
 
 };
 
-const bookSuccess = async(req,res) => {
-    try{
-        //insert into the info table
-        const query1 = {
-            //colmns = schedule_id,ticket_id,user_id,seat_booked,seat_booked_string,start_details,end_details
-            text : 'INSERT INTO "info" (schedule_id,user_id,seat_booked,seat_booked_string,start_details,end_details,coach_name) VALUES ($1,$2,$3,$4,$5,$6,$7)',
-            values : [req.body.schedule_id,req.body.user_id,req.body.seat_booked,req.body.seat_booked_string,req.body.start_details,req.body.end_details,coach_name]
-        }
-        await trainPool.query(query1) ;
+// const bookSuccess = async(req,res) => {
+//     try{
+//         //insert into the info table
+//         const query1 = {
+//             //colmns = schedule_id,ticket_id,user_id,seat_booked,seat_booked_string,start_details,end_details
+//             text : 'INSERT INTO "info" (schedule_id,username,seat_booked,seat_booked_string,details,coach_name) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+//             values : [req.body.schedule_id,req.body.user_id,req.body.seat_booked,req.body.seat_booked_string,req.body.details,coach_name]
+//         }
+//         await trainPool.query(query1) ;
 
-    }catch(err) {
+//     }catch(err) {
 
-    }
-}
+//     }
+// }
 
 module.exports = {
     temporarySeatBooking,

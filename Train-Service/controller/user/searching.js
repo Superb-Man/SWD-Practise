@@ -58,12 +58,14 @@ async function filter(from,to,date,train_uid = 'None') {
         values :[]
     }
     if(train_uid == 'None'){
-        query1.text = 'SELECT * FROM "train_schedule_info"' ;
-        query1.values = []
+        let today = new Date() ;
+        query1.text = 'SELECT * FROM "train_schedule_info" WHERE cancel_deadline >= $1 and booking = $2' ;
+        query1.values = [today,1]
     }
     else{
-        query1.text = 'SELECT * FROM "train_schedule_info" WHERE train_uid = $1' ;
-        query1.values = [train_uid] ;
+        let today = new Date() ;
+        query1.text = 'SELECT * FROM "train_schedule_info" WHERE train_uid = $1 and cancel_deadline >= $2 and booking = $3' ;
+        query1.values = [train_uid,today,1] ;
     }
 
     let results = (await trainPool.query(query1)).rows; 
