@@ -25,16 +25,16 @@ const temporarySeatBooking = async (req, res) => {
 
     //transaction starting
 
-    // if(!obj.accesstoken) {
-    //     return res.status(400).json({message: "Invalid token"});
-    // }
+    if(!obj.accesstoken) {
+        return res.status(400).json({message: "Invalid token"});
+    }
 
-    // jwt.verify(obj.accesstoken, secret, async (err, decodedToken) => {
+    jwt.verify(obj.accesstoken, secret, async (err, decodedToken) => {
 
-    //     if(err) {
-    //         console.log(err);
-    //         return res.status(400).json({message: "Invalid token"});
-    //     }
+        if(err) {
+            console.log(err);
+            return res.status(400).json({message: "Invalid token"});
+        }
 
 
         //transaction starting
@@ -91,7 +91,7 @@ const temporarySeatBooking = async (req, res) => {
             console.log(err) ;
             res.status(500).json({message: "Internal Server Error"}) ;
         }
-    // })
+    })
 
 };
 
@@ -113,96 +113,118 @@ const temporarySeatBooking = async (req, res) => {
 const cancelBooking = async(req,res) => {
     let obj = req.body ;
     console.log(obj) ;
-    try{
-        //at first find all the values from the info table
-        const query0 = {
-            text : 'SELECT * FROM "info" WHERE ticket_id = $1',
-            values : [obj.ticket_id]
-        }
-        const data = (await trainPool.query(query0)).rows[0] ;
-        console.log(data) ;
-
-        //check if the cancel date in schedule info is bigger than today
-        const checkQuery ={
-            text : 'SELECT * from "train_schedule_info" WHERE schedule_id = $1 and cancel_deadline >= $2',
-            values : [data.schedule_id,new Date()]
-        }
-        const check = (await trainPool.query(checkQuery)).rows[0] ;
-        if(check.length == 0) {
-            res.status(400).json({message: "Can't cancel the booking"}) ;
-            return ;
-        }
-        //delete the entry from the info table using id
-        const query1 = {
-            text : 'DELETE FROM "info" WHERE ticket_id = $1',
-            values : [obj.ticket_id]
-        }
-        await trainPool.query(query1) ;
-
-        const query3 = {
-            text : 'SELECT coach_id FROM "coach_info" WHERE coach_name = $1',
-            values : [data.coach_name]
-        }
-        let coach_id = (await trainPool.query(query3)).rows[0].coach_id;
-    
-        console.log(coach_id) ;
-        console.log("temporarySeatBooking") ;
-        console.log(data) ;
-        const dimension_query = {
-            text : 'SELECT "train_details".dimensions,"train_details".coaches FROM "train_details" JOIN "train_schedule_info" ON "train_schedule_info".train_uid = "train_details".train_uid  WHERE schedule_id = $1',
-            values : [data.schedule_id]
-        }
-
-        let dimension = -1 ;
-        let c_id = -1 ;
-        console.log(dimension,c_id)
-        let {dimensions,coaches} = (await trainPool.query(dimension_query)).rows[0] ;
-        for (let i = 0 ; i < coaches.length ; i++) {
-            console.log(coaches[i],coach_id) ;
-            if(coaches[i] == coach_id) {
-                dimension = dimensions[i] ;
-                c_id = i+1 ;
-                break ;
-            }
-        }
-        console.log(dimension,c_id)
-        // console.log(data.booked_details.length)
-        for(let i = 0 ; i < data.seat_booked.length ; i++) {
-            //update two collumns
-            const query2 = {
-                text : 'UPDATE "train_schedule_info" SET seat_details[$1][$2][$3] = $4 WHERE schedule_id = $5',
-                values : [c_id,dimension[1]*data.seat_booked[i][0]+data.seat_booked[i][1]+1,3,0,data.schedule_id]
-            }
-            await trainPool.query(query2) ;
-        }
-
-        res.status(200).json({message: "Booking Cancelled"}) ;
-
-        
-
-        //update the seat_details of the schedule
-
-    }catch(err){
-        console.log(err) ;
-        res.status(500).json({message: "Internal Server Error"}) ;
-
+    if(!obj.accesstoken) {
+        return res.status(400).json({message: "Invalid token"});
     }
+
+    jwt.verify(obj.accesstoken, secret, async (err, decodedToken) => {
+
+        if(err) {
+            console.log(err);
+            return res.status(400).json({message: "Invalid token"});
+        }
+        try{
+            //at first find all the values from the info table
+            const query0 = {
+                text : 'SELECT * FROM "info" WHERE ticket_id = $1',
+                values : [obj.ticket_id]
+            }
+            const data = (await trainPool.query(query0)).rows[0] ;
+            console.log(data) ;
+
+            //check if the cancel date in schedule info is bigger than today
+            const checkQuery ={
+                text : 'SELECT * from "train_schedule_info" WHERE schedule_id = $1 and cancel_deadline >= $2',
+                values : [data.schedule_id,new Date()]
+            }
+            const check = (await trainPool.query(checkQuery)).rows[0] ;
+            if(check.length == 0) {
+                res.status(400).json({message: "Can't cancel the booking"}) ;
+                return ;
+            }
+            //delete the entry from the info table using id
+            const query1 = {
+                text : 'DELETE FROM "info" WHERE ticket_id = $1',
+                values : [obj.ticket_id]
+            }
+            await trainPool.query(query1) ;
+
+            const query3 = {
+                text : 'SELECT coach_id FROM "coach_info" WHERE coach_name = $1',
+                values : [data.coach_name]
+            }
+            let coach_id = (await trainPool.query(query3)).rows[0].coach_id;
+        
+            console.log(coach_id) ;
+            console.log("temporarySeatBooking") ;
+            console.log(data) ;
+            const dimension_query = {
+                text : 'SELECT "train_details".dimensions,"train_details".coaches FROM "train_details" JOIN "train_schedule_info" ON "train_schedule_info".train_uid = "train_details".train_uid  WHERE schedule_id = $1',
+                values : [data.schedule_id]
+            }
+
+            let dimension = -1 ;
+            let c_id = -1 ;
+            console.log(dimension,c_id)
+            let {dimensions,coaches} = (await trainPool.query(dimension_query)).rows[0] ;
+            for (let i = 0 ; i < coaches.length ; i++) {
+                console.log(coaches[i],coach_id) ;
+                if(coaches[i] == coach_id) {
+                    dimension = dimensions[i] ;
+                    c_id = i+1 ;
+                    break ;
+                }
+            }
+            console.log(dimension,c_id)
+            // console.log(data.booked_details.length)
+            for(let i = 0 ; i < data.seat_booked.length ; i++) {
+                //update two collumns
+                const query2 = {
+                    text : 'UPDATE "train_schedule_info" SET seat_details[$1][$2][$3] = $4 WHERE schedule_id = $5',
+                    values : [c_id,dimension[1]*data.seat_booked[i][0]+data.seat_booked[i][1]+1,3,0,data.schedule_id]
+                }
+                await trainPool.query(query2) ;
+            }
+
+            res.status(200).json({message: "Booking Cancelled"}) ;
+
+            
+
+            //update the seat_details of the schedule
+
+        }catch(err){
+            console.log(err) ;
+            res.status(500).json({message: "Internal Server Error"}) ;
+
+        }
+    }) ;
 }
 
 const history = async (req,res) => {
     let obj = req.body ;
     console.log(obj) ;
-    try{
-        const query1 = {
-            text : 'SELECT * FROM "info" WHERE username = $1',
-            values : [obj.user_name]
-        }
-        let data = (await trainPool.query(query1)).rows ;
-        res.status(200).json(data) ;
-    }catch(err){
-        console.log(err) ;
-        res.status(500).json({message: "Internal Server Error"}) ;
+    if(!obj.accesstoken) {
+        return res.status(400).json({message: "Invalid token"});
     }
+
+    jwt.verify(obj.accesstoken, secret, async (err, decodedToken) => {
+
+        if(err) {
+            console.log(err);
+            return res.status(400).json({message: "Invalid token"});
+        }
+        try{
+            const query1 = {
+                text : 'SELECT * FROM "info" WHERE username = $1',
+                values : [obj.user_name]
+            }
+            let data = (await trainPool.query(query1)).rows ;
+            res.status(200).json(data) ;
+        }catch(err){
+            console.log(err) ;
+            res.status(500).json({message: "Internal Server Error"}) ;
+        }
+    }) ;
 }
 
 module.exports = {
