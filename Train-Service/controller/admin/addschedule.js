@@ -79,6 +79,7 @@ const addschedule = async (req, res) => {
             train_id : req.body.train_id,
         }
         obj.seat_details = await addSeatDetails(newObj);
+        console.log(obj.train_id) ;
         const query2 = {
             text : 'INSERT INTO "train_schedule_info" (train_id,train_uid,routes,seat_details,booking,cancel_deadline) VALUES ($1,$2,$3,$4,$5,$6)',
             values : [obj.train_id,obj.train_uid,obj.routes,obj.seat_details,obj.booking,obj.cancel_deadline]
@@ -205,8 +206,8 @@ const getScheduleByUID = async (req, res) => {
         let train_results = [] ;
 
         for(let i = 0;i<results.length;i++){
-            let l = results[0].routes.length ;
-            let times = queryUtils.timeDifference(new Date(results[0].routes[0].date),new Date(results[0].routes[l-1].date),results[0].routes[0].departure_time,results[0].routes[l-1].departure_time);
+            let l = results[i].routes.length ;
+            let times = queryUtils.timeDifference(new Date(results[i].routes[0].date),new Date(results[i].routes[l-1].date),results[i].routes[0].departure_time,results[i].routes[l-1].departure_time);
             let train_result = {
                 schedule_id : results[i].schedule_id,
                 train_id : results[i].train_id,
@@ -215,14 +216,18 @@ const getScheduleByUID = async (req, res) => {
                 duration_hour :times.hours,
                 duration_minutes : times.minutes,
                 durations : times.durations,
-                departure_date : new Date(results[0].routes[0].date), 
-                departure_time : results[0].routes[0].time,
-                arrival_date :  new Date(results[0].routes[l-1].date),
-                arrival_time : results[0].routes[l-1].time,
+                departure_date : new Date(results[i].routes[0].date), 
+                departure_time : results[i].routes[0].time,
+                arrival_date :  new Date(results[i].routes[l-1].date),
+                arrival_time : results[i].routes[l-1].time,
                 routes : results[i].routes,
             }
             train_results.push(train_result) ;
         }
+        //sort
+        // train_results.sort((a,b) => {
+        //     return (new Date() - new Date(a.departure_date);
+        // }
         res.status(200).json(train_results);
 
     }catch (err){

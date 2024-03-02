@@ -250,10 +250,9 @@ const getAllTrainsByCompanyName = async(req,res)=>{
     }
 };
 
-// req.params.train_uid = "Lara-62";
 // req.params.coach = 'SHOVAN'
 const showGrid = async(req,res)=>{
-    req.params.train_uid = "Lara-62";
+    req.params.train_uid = "L-62";
     req.params.coach = 'SHOVAN'
     try{
         let obj = await findIndexofCoach(req.params.train_uid,req.params.coach);
