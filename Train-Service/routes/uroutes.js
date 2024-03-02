@@ -22,7 +22,7 @@ router.get('/seat_details/:from/:to/:date/person=:persons/:coach/:train_uid', bo
 
 router.get('/train/temp_booking/:from/:to/:date/person=:persons/:coach/:train_uid', bodyParser,userBookingController.temporarySeatBooking) ;
 router.post('/train/cancelBooking', bodyParser,userBookingController.cancelBooking) ;
-router.get('/train/history', bodyParser,userBookingController.history) ;
+router.post('/train/history', bodyParser,userBookingController.history) ;
 
 
 

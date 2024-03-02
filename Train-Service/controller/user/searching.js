@@ -272,7 +272,7 @@ const gettraininfo = async (req, res) => {
         //Query handling
 
         if(obj.query != undefined && obj.query.localeCompare('quickest') == 0) {
-            trains = queryUtils.findQuickesttrain(trains) ;
+            trains = queryUtils.findQuickestTrain(trains) ;
             // console.log('here') ;
         }
         if(obj.query != undefined && obj.query.localeCompare('shortestroutes') == 0){
