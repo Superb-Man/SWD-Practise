@@ -326,8 +326,8 @@ const paymentInit = async (req, res) => {
       // console.log(req.body)
     
       const getTicketInfoQuery = {
-        text: `INSERT into "info" (schedule_id, username, seat_booked, seat_booked_string, class_name,transaction_id, paid_status, details) VALUES ($1, $2, $3, $4, $5 , $6, $7 , $8) RETURNING *`,
-        values: [ air_schedule_id, user_name, seat_booked , seat_booked_string, class_name , transactionId, 'false', details]
+        text: `INSERT into "info" (schedule_id, username, seat_booked, seat_booked_string, class_name,transaction_id, paid_status, details, amount) VALUES ($1, $2, $3, $4, $5 , $6, $7 , $8, $9) RETURNING *`,
+        values: [ air_schedule_id, user_name, seat_booked , seat_booked_string, class_name , transactionId, 'false', details, grandTotalFare]
       }
       const result = await airPool.query(getTicketInfoQuery);
       console.log(result);
@@ -424,14 +424,64 @@ const paymentFail = async (req, res) => {
 
   try{
 
+    //console.log(-1)
+
+    // const selectquery = {
+
+    //   text: `SELECT * FROM "info" WHERE transaction_id = $1`,
+    //   values: [ transactionId]
+
+    // }
+    // const selresult = await airPool.query(selectquery).rows[0];
+
+    // console.log(selresult)
+
+    // // const checkQuery ={
+    // //   text : 'SELECT * from "air_schedule_info" WHERE schedule_id = $1 and cancel_deadline >= $2',
+    // //   values : [selresult.schedule_id,new Date()]
+    // // }
+
+    // // const check = (await airPool.query(checkQuery)).rows[0] ;
+
+    // const query3 = {
+    //   text : 'SELECT class_id FROM "class_info" WHERE class_name = $1',
+    //   values : [selresult.class_name]
+    // }
+
+    // let class_id = (await airPool.query(query3)).rows[0].class_id;
+    // //console.log(dimensions)
+    
+
+    // const dimension_query = {
+    //   text : 'SELECT "air_details".dimensions,"air_details".classes FROM "air_details" JOIN "air_schedule_info" ON "air_schedule_info".flight_id = "air_details".flight_id  WHERE schedule_id = $1',
+    //   values : [selresult.schedule_id]
+    // }
+
+    // let {dimensions,classes} = (await airPool.query(dimension_query)).rows[0] ;
+
+    // console.log(dimensions)
+
+    // for(let i = 0 ; i < selresult.seat_booked.length ; i++) {
+    //   //update two columns
+    //   const query2 = {
+    //       text : 'UPDATE "air_schedule_info" SET seat_details[$1][$2][$3] = $4 WHERE schedule_id = $5',
+    //       values : [class_id,dimensions[class_id][1]*data.seat_booked[i][0]+data.seat_booked[i][1]+1,2,0,selresult.schedule_id]
+    //   }
+    //   await airPool.query(query2) ;
+    // }
+
+    //console.log(selresult)
+
     const deletequery = {
-        text: `DELETE from "info" WHERE transaction_id = $1`,
+        text: 'DELETE from "info" WHERE transaction_id = $1',
         values: [ transactionId]
     }
-  const result = await airPool.query(deletequery);
-  console.log(result);
+  const delresult = await airPool.query(deletequery);
+  console.log(delresult);
 
 } catch {
+
+  //console.log(-3)
 
 }
 
