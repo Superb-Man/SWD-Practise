@@ -158,10 +158,9 @@ const getSeatAvailableBySchedule = async (req, res) => {
 }
 
 const updateSchedule = async(req,res) => {
+    console.log(req.body);
     try{
-        req.body.schedule_id = 1 ;
         req.body.subject = "Train Schedule Update" ;
-        req.body.message = req.params.train_uid + " Delayed for 1 hour" ;
         let toList = [] ;
         //at first find the user,schedule_id,ticket_id from schedule_info table with info using schedule_id
         const query1 = {
@@ -172,6 +171,13 @@ const updateSchedule = async(req,res) => {
         }
         const results = (await trainPool.query(query1)).rows ;
         //join on AccountDB to get user_email
+        //update the routes and booking column using schedule_id
+        const query3 = {
+            text : 'UPDATE "train_schedule_info" SET routes = $1,booking = $2 WHERE schedule_id = $3',
+            values : [req.body.routes,req.body.booking,req.body.schedule_id]
+        }
+        console.log(results);
+        const result3 = (await trainPool.query(query3));
         for(let i = 0;i<results.length;i++){
             const query2 = {
                 text : 'SELECT email from "clients" WHERE username = $1',
@@ -179,12 +185,24 @@ const updateSchedule = async(req,res) => {
             }
             const email = (await accountPool.query(query2)).rows[0];
             console.log(email);
-            to = 'kaziistiak253@gmail.com'
+            to = 'kaziistiak253@gmail.com';
+            const newTimeQuery = {
+                text:'SELECT routes from "train_schedule_info" WHERE schedule_id = $1',
+                values : [req.body.schedule_id]
+            }
+            //map to date and departure time using start 
+            let newTime = (await trainPool.query(newTimeQuery)).rows[0] ;
+            console.log(newTime) ;
+            //map to date and departure time using start
+            newTime = newTime.routes.filter(route=>route.start.localeCompare(results[i].details.start) === 0).map(route=>({date:route.date,time:route.departure_time}))[0];
+            console.log("newTime",newTime) ;
             // start_details have start,time,date
             req.body.message +="\nPrevious schedule :\n" + results[i].details.start +" to "+ results[i].details.dest +"\n";
-            req.body.message+="Time : "+results[i].details.time +"\nDate : "+ results[i].details.date ;
+            req.body.message+="Time : "+results[i].details.time +"\nDate : "+ new Date(results[i].details.date).toLocaleDateString() +"\n";
+            req.body.message+="New schedule date :"+new Date(newTime.date).toLocaleDateString()+ " and time : "+ newTime.time+"\n";
             await mail.mailing(to,req.body.subject,req.body.message);
         }
+        res.status(200).json({message: "Schedule Updated"});
 
     }catch(err) {
         console.log(err);
@@ -195,7 +213,6 @@ const updateSchedule = async(req,res) => {
 
 const getScheduleByUID = async (req, res) => {
     try{
-        req.params.train_uid = 'Agnibina-735';
         //select all from train_schedule_info
         const query1 = {
             text : 'SELECT * from "train_schedule_info" WHERE train_uid = $1',
@@ -221,6 +238,8 @@ const getScheduleByUID = async (req, res) => {
                 arrival_date :  new Date(results[i].routes[l-1].date),
                 arrival_time : results[i].routes[l-1].time,
                 routes : results[i].routes,
+                booking : results[i].booking,
+                cancel_deadline : results[i].cancel_deadline,
             }
             train_results.push(train_result) ;
         }
@@ -240,8 +259,8 @@ const getScheduleByUID = async (req, res) => {
 const getSeatInfoBySchedule = async (req, res) => {
     try{
         console.log("here") ;
-        req.body.schedule_id = 1 ;
-        req.body.train_uid = "Agnibina-735" ;
+        // req.body.schedule_id = 1 ;
+        // req.body.train_uid = "Agnibina-735" ;
         //join three tables train_schedule_info,train_details,coach_info
         //join coach_info to find coachName too
         const query1 = {
