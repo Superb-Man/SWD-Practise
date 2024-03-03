@@ -4,6 +4,9 @@ const trainPool = require('../config/trainDB');
 const paymentPool = require('../config/paymentDB');
 const accountPool = require('../config/accountDB');
 
+const nodemailer = require('nodemailer');     // send the ticket in mail
+const config  = require('../config.json')
+
 
 const { Pool } = require('pg');
 
@@ -19,6 +22,14 @@ const store_id = process.env.STORE_ID
 const store_passwd = process.env.STORE_PASSWORD
 const is_live = false //true for live, false for sandbox
 
+
+const transporter = nodemailer.createTransport({
+  service : 'gmail',
+  auth : {
+      user: config.email,
+      pass: config.password
+  }
+});
 
 const paymentInitTrain = async (req, res) => {
 
@@ -172,7 +183,7 @@ const paymentSuccessTrain =  async (req, res) => {
       const result = await trainPool.query(updatePaidStatus);
 
       // create a new ticket
-      const transactionId = req.body.transactionId;
+      // const transactionId = req.body.transactionId;
         const getTicketInfo = {
             text: `SELECT * FROM "info" WHERE transaction_id = $1`,
             values: [transactionId]
@@ -445,33 +456,32 @@ page.drawText(`Total Fare: Tk ${ticketInfo.amount}`, {
     color: rgb(0.2, 0.2, 0.2)
 });
 
+    // Draw license info details similarly
 
-      // let fareY = startY - 60;
-        
-      //   page.drawText(`Total Fare: Tk ${ticketInfo.amount}`, {
-      //       x: 50,
-      //       y: fareY,
-      //       size: subtitleFontSize,
-      //       font: await doc.embedFont(StandardFonts.TimesRomanBold),
-      //       color: rgb(0.2, 0.2, 0.2)
-      //   });
+    // Save the PDF
+    const filePath = "./ticket#"+`${transactionId}`+".pdf";
+  fs.writeFileSync(filePath, await doc.save());
 
-      //   // Draw license related info
-      //   const licenseY = fareY - 30;
-      //   page.drawText("License Related Info:", {
-      //       x: 50,
-      //       y: licenseY,
-      //       size: subtitleFontSize,
-      //       font: await doc.embedFont(StandardFonts.TimesRomanBold),
-      //       color: rgb(0.2, 0.2, 0.2)
-      //   });
-        // Draw license info details similarly
+  // Create a Nodemailer transporter
 
-        // Save the PDF
-        const filePath = "./ticket.pdf";
-        fs.writeFileSync(filePath, await doc.save());
-      
+// Compose an email
+    transporter.sendMail({
+      from : 'Tarik <'+config.email+'>',
+      to : 'shafiulhaque982@gmail.com',
+      subject: "Place Order",
+      html: `<h1> Heading </h1>
+          <p> This is nodemailer </p>`,
+      attachments:[
+          {
+              filename:'Train_Ticket'+`${transactionId}`+".pdf", 
+              path:filePath
+          }
+      ]
+    },(err,info) => {
+      if(err) throw err;
 
+      res.json({status:info.response})
+    })
 
   } catch {
 
