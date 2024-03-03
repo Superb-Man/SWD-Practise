@@ -217,6 +217,7 @@ const getairinfo = async (req, res) => {
                         transits : results[i].transits,
                         dimensions : dimensions[class_idx], //row-column
                         // seat_details : results[i].seat_details[class_id],
+                        logo : results[i].logo,
                         seat : obj.seat 
                     }
                     flights.push(flight_result);

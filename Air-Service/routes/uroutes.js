@@ -20,7 +20,8 @@ router.get('/seat_details/:from/:to/:date/person=:persons/:class/:flight_id', bo
 
 
 router.post('/air/temp_booking/:from/:to/:date/person=:persons/:class/:flight_id', bodyParser,userBookingController.temporarySeatBooking) ;
-
+router.post('/air/cancelBooking', bodyParser,userBookingController.cancelBooking) ;
+router.post('/air/history', bodyParser,userBookingController.history) ;
 
 
 module.exports = router;
