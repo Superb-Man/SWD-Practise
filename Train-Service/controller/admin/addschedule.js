@@ -71,12 +71,18 @@ const addschedule = async (req, res) => {
         console.log(req.body)
 
 
-        let obj = {"train_uid":req.body.train_uid,"train_id":req.body.train_id,"routes":req.body.routes,"booking":req.body.booking,"cancel_deadline" :new Date(req.body.cancel_deadline)};
+        let obj = {"train_uid":req.body.train_uid,"company_name":req.body.company_name,"routes":req.body.routes,"booking":req.body.booking,"cancel_deadline" :new Date(req.body.cancel_deadline)};
 
+        //find the train id from train services
+        const query1 = {
+            text : 'SELECT train_id from "train_services" WHERE company_name = $1',
+            values : [obj.company_name]
+        }
+        obj.train_id = (await trainPool.query(query1)).rows[0].train_id ;
 
         let newObj = {
             train_uid : req.body.train_uid,
-            train_id : req.body.train_id,
+            train_id : obj.train_id,
         }
         obj.seat_details = await addSeatDetails(newObj);
         console.log(obj.train_id) ;
