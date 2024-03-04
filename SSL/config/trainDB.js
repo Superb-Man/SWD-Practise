@@ -1,8 +1,8 @@
 const { Pool } = require('pg');
-// const { createClient } = require('@supabase/supabase-js');
+ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
-// const supabaseUrl = process.env.supabaseUrl;
-// const supabaseKey = process.env.supabaseKey ;
+const supabaseUrl = process.env.supabaseUrl;
+const supabaseKey = process.env.supabaseKey ;
 
 // console.log(process.env.uritrain);
 const trainPool = new Pool({
@@ -23,9 +23,9 @@ trainPool.connect(err => {
     }
 });
 
-// const trainPool2 = createClient(supabaseUrl,supabaseKey);
+const trainPool2 = createClient(supabaseUrl,supabaseKey); 
 
 module.exports = {
     trainPool,
-    // trainPool2
+    trainPool2
 }

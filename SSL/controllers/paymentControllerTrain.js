@@ -1,8 +1,10 @@
 const express = require('express');
 const SSLCommerzPayment = require("sslcommerz");
-const trainPool = require('../config/trainDB');
+const trainServer = require('../config/trainDB');
 const paymentPool = require('../config/paymentDB');
 const accountPool = require('../config/accountDB');
+
+const trainPool = trainServer.trainPool
 
 const nodemailer = require('nodemailer');     // send the ticket in mail
 const config  = require('../config.json')
@@ -181,641 +183,656 @@ const paymentSuccessTrain =  async (req, res) => {
           values: ['true', transactionId]
       }
       const result = await trainPool.query(updatePaidStatus);
+      console.log('result',result)
 
       // create a new ticket
       // const transactionId = req.body.transactionId;
-        const getTicketInfo = {
-            text: `SELECT * FROM "info" WHERE transaction_id = $1`,
-            values: [transactionId]
-        };
-        const result2 = await trainPool.query(getTicketInfo);
-        const ticketInfo = result2.rows[0];
+      const getTicketInfo = {
+        text: `SELECT * FROM "info" WHERE transaction_id = $1`,
+        values: [transactionId]
+    };
+    const result2 = await trainPool.query(getTicketInfo);
+    const ticketInfo = result2.rows[0];
+    console.log("ticketInfo",ticketInfo)
 
-        // Retrieve client information
-        const username = ticketInfo.username;
-        const getUserEmailQuery = {
-            text: `SELECT * FROM "clients" WHERE username = $1`,
-            values: [username]
-        };
-        const result3 = await accountPool.query(getUserEmailQuery);
-        const clientInfo = result3.rows[0];
+    // Retrieve client information
+    const username = ticketInfo.username;
+    const getUserEmailQuery = {
+        text: `SELECT * FROM "clients" WHERE username = $1`,
+        values: [username]
+    };
+    const result3 = await accountPool.query(getUserEmailQuery);
+    const clientInfo = result3.rows[0];
+    console.log("clientInfo",clientInfo)
 
-        // Retrieve air schedule information
-        const schedule_id = ticketInfo.schedule_id;
+    // Retrieve air schedule information
+    const schedule_id = ticketInfo.schedule_id;
 
-        const getTrainScheduleInfoQuery = {
-            text: `SELECT * FROM "train_schedule_info" WHERE schedule_id = $1`,
-            values: [schedule_id]
-        };
-        const result4 = await trainPool.query(getTrainScheduleInfoQuery);
-        const airScheduleInfo = result4.rows[0];
+    const getTrainScheduleInfoQuery = {
+        text: `SELECT * FROM "train_schedule_info" WHERE schedule_id = $1`,
+        values: [schedule_id]
+    };
+    const result4 = await trainPool.query(getTrainScheduleInfoQuery);
+    const airScheduleInfo = result4.rows[0];
+    console.log("airscheduleinfo" , airScheduleInfo)
+    // Retrieve air services information
+    const train_id = airScheduleInfo.train_id;
+    const getTrainServicesQuery = {
+        text: `SELECT * FROM "train_services" WHERE train_id = $1`,
+        values: [train_id]
+    };
+    const result5 = await trainPool.query(getTrainServicesQuery);
+    const airServices = result5.rows[0];
+    console.log('airservices',airServices)
 
-        // Retrieve air services information
-        const train_id = airScheduleInfo.train_id;
-        const getTrainServicesQuery = {
-            text: `SELECT * FROM "train_services" WHERE train_id = $1`,
-            values: [train_id]
-        };
-        const result5 = await trainPool.query(getTrainServicesQuery);
-        const airServices = result5.rows[0];
+    // Create a new PDF document
+    const doc = await PDFDocument.create();
+    const page = doc.addPage();
+    const { width, height } = page.getSize();
 
-        // Create a new PDF document
-        const doc = await PDFDocument.create();
-        const page = doc.addPage();
-        const { width, height } = page.getSize();
+    // Set font sizes
+    const titleFontSize = 25;
+    const subtitleFontSize = 12;
+    const textFontSize = 10;
 
-        // Set font sizes
-        const titleFontSize = 25;
-        const subtitleFontSize = 12;
-        const textFontSize = 10;
+    // Add title
+    page.drawText("e-TravelKit Ticket", {
+        x: 50,
+        y: height - 4 * titleFontSize,
+        size: titleFontSize,
+        font: await doc.embedFont(StandardFonts.TimesRoman),
+        color: rgb(1.0, 0.8, 0)
+    });
+    // Draw client information
+    let startY = height - 150;
+    page.drawText(`Name : ${clientInfo.name}`, {
+        x: 50,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.TimesRomanBold),
+        color: rgb(0.2, 0.2, 0.2)
+    });
 
-        // Add title
-        page.drawText("e-TravelKit Ticket", {
-            x: 50,
-            y: height - 4 * titleFontSize,
-            size: titleFontSize,
-            font: await doc.embedFont(StandardFonts.TimesRoman),
-            color: rgb(1.0, 0.8, 0)
-        });
-        // Draw client information
-        let startY = height - 150;
-        page.drawText(`Name : ${clientInfo.name}`, {
-            x: 50,
-            y: startY,
-            size: subtitleFontSize,
-            font: await doc.embedFont(StandardFonts.TimesRomanBold),
-            color: rgb(0.2, 0.2, 0.2)
-        });
+    startY -= 20;
+    page.drawText(`Email  : ${clientInfo.email}`, {
+        x: 50,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.TimesRoman),
+        color: rgb(0.2, 0.2, 0.2)
+    });
 
-        startY -= 20;
-        page.drawText(`Email  : ${clientInfo.email}`, {
-            x: 50,
-            y: startY,
-            size: subtitleFontSize,
-            font: await doc.embedFont(StandardFonts.TimesRoman),
-            color: rgb(0.2, 0.2, 0.2)
-        });
+    startY -= 20;
+    page.drawText(`Phone  : ${clientInfo.phone}`, {
+        x: 50,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.TimesRoman),
+        color: rgb(0.2, 0.2, 0.2)
+    });
 
-        startY -= 20;
-        page.drawText(`Phone  : ${clientInfo.phone}`, {
-            x: 50,
-            y: startY,
-            size: subtitleFontSize,
-            font: await doc.embedFont(StandardFonts.TimesRoman),
-            color: rgb(0.2, 0.2, 0.2)
-        });
+    // Extract the client's date of birth
+    const clientDOB = new Date(clientInfo.date_of_birth);
 
-        // Extract the client's date of birth
-        const clientDOB = new Date(clientInfo.date_of_birth);
+    // Format the date to "12 DEC 1998" format
+    const formattedDOB = `${clientDOB.getDate()} ${clientDOB.toLocaleString('default', { month: 'short' })} ${clientDOB.getFullYear()}`;
+    
+    
+    const today = new Date();
+    let age = today.getFullYear() - clientDOB.getFullYear();
+    const monthDiff = today.getMonth() - clientDOB.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < clientDOB.getDate())) {
+        age--;
+    }
 
-        // Format the date to "12 DEC 1998" format
-        const formattedDOB = `${clientDOB.getDate()} ${clientDOB.toLocaleString('default', { month: 'short' })} ${clientDOB.getFullYear()}`;
-        
-        
-        const today = new Date();
-        let age = today.getFullYear() - clientDOB.getFullYear();
-        const monthDiff = today.getMonth() - clientDOB.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < clientDOB.getDate())) {
-            age--;
-        }
+    startY -= 20;
+    page.drawText(`Age  : ${age} years`, {
+        x: 50,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.TimesRoman),
+        color: rgb(0.2, 0.2, 0.2)
+    });
 
-        startY -= 20;
-        page.drawText(`Age  : ${age} years`, {
-            x: 50,
-            y: startY,
-            size: subtitleFontSize,
-            font: await doc.embedFont(StandardFonts.TimesRoman),
-            color: rgb(0.2, 0.2, 0.2)
-        });
+    // Draw a horizontal line
+    const lineY = startY - 20;
+    page.drawLine({
+        start: { x: 50, y: lineY },
+        end: { x: width - 50, y: lineY },
+        color: rgb(0.3, 0.5, 1.0),
+        thickness: 1
+    });
 
-        // Draw a horizontal line
-        const lineY = startY - 20;
-        page.drawLine({
-            start: { x: 50, y: lineY },
-            end: { x: width - 50, y: lineY },
-            color: rgb(0.3, 0.5, 1.0),
-            thickness: 1
-        });
+    // Flight Details
+    startY -= 40;
+    page.drawText(`Flight Details :`, {
+        x: 50,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.TimesRomanBold),
+        color: rgb(0.2, 0.2, 0.2)
+    });
 
-        // Flight Details
-        startY -= 40;
-        page.drawText(`Flight Details :`, {
-            x: 50,
-            y: startY,
-            size: subtitleFontSize,
-            font: await doc.embedFont(StandardFonts.TimesRomanBold),
-            color: rgb(0.2, 0.2, 0.2)
-        });
-
-        // Draw company information
-        const companyY = lineY - 40;
-        page.drawText(`Company Name: ${airServices.company_name}`, {
-            x: 50,
-            y: companyY,
-            size: subtitleFontSize,
-            font: await doc.embedFont(StandardFonts.Helvetica),
-            color: rgb(0.2, 0.2, 0.2)
-        });
+    // Draw company information
+    const companyY = lineY - 40;
+    page.drawText(`Company Name: ${airServices.company_name}`, {
+        x: 50,
+        y: companyY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.Helvetica),
+        color: rgb(0.2, 0.2, 0.2)
+    });
 
 // Draw departure and arrival information
-      // Departure Date
-      startY = companyY - 30;
-      page.drawText(`From:`, {
-          x: 50,
-          y: startY,
-          size: subtitleFontSize,
-          font: await doc.embedFont(StandardFonts.Helvetica),
-          color: rgb(0.2, 0.2, 0.2)
-      });
-      page.drawText(`${airScheduleInfo.from_port}`, {
-          x: 150,
-          y: startY,
-          size: subtitleFontSize,
-          font: await doc.embedFont(StandardFonts.Helvetica),
-          color: rgb(0.2, 0.2, 0.2)
-      });
+  // Departure Date
+  startY = companyY - 30;
+  page.drawText(`From:`, {
+      x: 50,
+      y: startY,
+      size: subtitleFontSize,
+      font: await doc.embedFont(StandardFonts.Helvetica),
+      color: rgb(0.2, 0.2, 0.2)
+  });
+  page.drawText(`${airScheduleInfo.routes[0].start}`, {
+      x: 150,
+      y: startY,
+      size: subtitleFontSize,
+      font: await doc.embedFont(StandardFonts.Helvetica),
+      color: rgb(0.2, 0.2, 0.2)
+  });
 
-      // To Location
-      page.drawText(`To:`, {
-        x: 300, // Adjust as needed
-        y: startY, // Same startY as Departure Date
-        size: subtitleFontSize,
-        font: await doc.embedFont(StandardFonts.Helvetica),
-        color: rgb(0.2, 0.2, 0.2)
-      });
-      page.drawText(`${airScheduleInfo.to_port}`, {
-        x: 400, // Adjust as needed
-        y: startY, // Same startY as Departure Date
-        size: subtitleFontSize,
-        font: await doc.embedFont(StandardFonts.Helvetica),
-        color: rgb(0.2, 0.2, 0.2)
-      });
-      
-      startY -= 20;
-      page.drawText(`Departure Date:`, {
-          x: 50,
-          y: startY,
-          size: subtitleFontSize,
-          font: await doc.embedFont(StandardFonts.Helvetica),
-          color: rgb(0.2, 0.2, 0.2)
-      });
-      // Extract the departure date components
-      const departureDate = new Date(airScheduleInfo.departure_date);
-      const day = departureDate.getDate();
-      const month = departureDate.toLocaleString('default', { month: 'short' });
-      const year = departureDate.getFullYear();
+  // To Location
+  page.drawText(`To:`, {
+    x: 300, // Adjust as needed
+    y: startY, // Same startY as Departure Date
+    size: subtitleFontSize,
+    font: await doc.embedFont(StandardFonts.Helvetica),
+    color: rgb(0.2, 0.2, 0.2)
+  });
+  page.drawText(`${airScheduleInfo.routes[airScheduleInfo.routes.length-1].start}`, {
+    x: 400, // Adjust as needed
+    y: startY, // Same startY as Departure Date
+    size: subtitleFontSize,
+    font: await doc.embedFont(StandardFonts.Helvetica),
+    color: rgb(0.2, 0.2, 0.2)
+  });
+  
+  startY -= 20;
+  page.drawText(`Departure Date:`, {
+      x: 50,
+      y: startY,
+      size: subtitleFontSize,
+      font: await doc.embedFont(StandardFonts.Helvetica),
+      color: rgb(0.2, 0.2, 0.2)
+  });
+  // Extract the departure date components
+  const departureDate = new Date(airScheduleInfo.routes[0].date);
+  const day = departureDate.getDate();
+  const month = departureDate.toLocaleString('default', { month: 'short' });
+  const year = departureDate.getFullYear();
 
-      // Format the departure date
-      const formattedDepartureDate = `${day} ${month} ${year}`;
-      page.drawText(`${formattedDepartureDate}`, {
-          x: 150,
-          y: startY,
-          size: subtitleFontSize,
-          font: await doc.embedFont(StandardFonts.Helvetica),
-          color: rgb(0.2, 0.2, 0.2)
-      });
+  // Format the departure date
+  const formattedDepartureDate = `${day} ${month} ${year}`;
+  page.drawText(`${formattedDepartureDate}`, {
+      x: 150,
+      y: startY,
+      size: subtitleFontSize,
+      font: await doc.embedFont(StandardFonts.Helvetica),
+      color: rgb(0.2, 0.2, 0.2)
+  });
 
-      // Arrival Date
-      page.drawText(`Arrival Date:`, {
-        x: 300, // Adjust as needed
-        y: startY,
-        size: subtitleFontSize,
-        font: await doc.embedFont(StandardFonts.Helvetica),
-        color: rgb(0.2, 0.2, 0.2)
-      });
-      const arrivalDate = new Date(airScheduleInfo.arrival_date);
-      const arrivalDay = arrivalDate.getDate();
-      const arrivalMonth = arrivalDate.toLocaleString('default', { month: 'short' });
-      const arrivalYear = arrivalDate.getFullYear();
-      const formattedArrivalDate = `${arrivalDay} ${arrivalMonth} ${arrivalYear}`;
-      page.drawText(`${formattedArrivalDate}`, {
-        x: 400, // Adjust as needed
-        y: startY,
-        size: subtitleFontSize,
-        font: await doc.embedFont(StandardFonts.Helvetica),
-        color: rgb(0.2, 0.2, 0.2)
-      });
-
-      // Departure Time (Assuming departureTime variable is defined)
-      startY -= 20;
-      page.drawText(`Departure Time:`, {
-          x: 50,
-          y: startY,
-          size: subtitleFontSize,
-          font: await doc.embedFont(StandardFonts.Helvetica),
-          color: rgb(0.2, 0.2, 0.2)
-      });
-      page.drawText(`${airScheduleInfo.departure_time}`, {
-          x: 150,
-          y: startY,
-          size: subtitleFontSize,
-          font: await doc.embedFont(StandardFonts.Helvetica),
-          color: rgb(0.2, 0.2, 0.2)
-      });
-
-      // Arrival Time
-      page.drawText(`Arrival Time:`, {
-        x: 300, // Adjust as needed
-        y: startY,
-        size: subtitleFontSize,
-        font: await doc.embedFont(StandardFonts.Helvetica),
-        color: rgb(0.2, 0.2, 0.2)
-      });
-      page.drawText(`${airScheduleInfo.arrival_time}`, {
-        x: 400, // Adjust as needed
-        y: startY,
-        size: subtitleFontSize,
-        font: await doc.embedFont(StandardFonts.Helvetica),
-        color: rgb(0.2, 0.2, 0.2)
-      });
-
-      startY -= 20;
-      page.drawLine({
-          start: { x: 50, y: startY },
-          end: { x: width - 50, y: startY },
-          color: rgb(0.3, 0.5, 1.0),
-          thickness: 1
-      });
-      
-// Draw Seat Booked String
-startY -= 40; 
-page.drawText(`Seat Booked : ${ticketInfo.seat_booked_string}`, {
-    x: 50,
+  // Arrival Date
+  page.drawText(`Arrival Date:`, {
+    x: 300, // Adjust as needed
     y: startY,
     size: subtitleFontSize,
-    font: await doc.embedFont(StandardFonts.TimesRoman),
+    font: await doc.embedFont(StandardFonts.Helvetica),
     color: rgb(0.2, 0.2, 0.2)
+  });
+  const arrivalDate = new Date(airScheduleInfo.routes[airScheduleInfo.routes.length-1].date);
+  const arrivalDay = arrivalDate.getDate();
+  const arrivalMonth = arrivalDate.toLocaleString('default', { month: 'short' });
+  const arrivalYear = arrivalDate.getFullYear();
+  const formattedArrivalDate = `${arrivalDay} ${arrivalMonth} ${arrivalYear}`;
+  page.drawText(`${formattedArrivalDate}`, {
+    x: 400, // Adjust as needed
+    y: startY,
+    size: subtitleFontSize,
+    font: await doc.embedFont(StandardFonts.Helvetica),
+    color: rgb(0.2, 0.2, 0.2)
+  });
+
+  // Departure Time (Assuming departureTime variable is defined)
+  startY -= 20;
+  page.drawText(`Departure Time:`, {
+      x: 50,
+      y: startY,
+      size: subtitleFontSize,
+      font: await doc.embedFont(StandardFonts.Helvetica),
+      color: rgb(0.2, 0.2, 0.2)
+  });
+  page.drawText(`${airScheduleInfo.routes[0].departure_time}`, {
+      x: 150,
+      y: startY,
+      size: subtitleFontSize,
+      font: await doc.embedFont(StandardFonts.Helvetica),
+      color: rgb(0.2, 0.2, 0.2)
+  });
+
+  // Arrival Time
+  page.drawText(`Arrival Time:`, {
+    x: 300, // Adjust as needed
+    y: startY,
+    size: subtitleFontSize,
+    font: await doc.embedFont(StandardFonts.Helvetica),
+    color: rgb(0.2, 0.2, 0.2)
+  });
+  page.drawText(`${airScheduleInfo.routes[airScheduleInfo.routes.length-1].departure_time}`, {
+    x: 400, // Adjust as needed
+    y: startY,
+    size: subtitleFontSize,
+    font: await doc.embedFont(StandardFonts.Helvetica),
+    color: rgb(0.2, 0.2, 0.2)
+  });
+
+  startY -= 20;
+  page.drawLine({
+      start: { x: 50, y: startY },
+      end: { x: width - 50, y: startY },
+      color: rgb(0.3, 0.5, 1.0),
+      thickness: 1
+  });
+  
+// Draw Seat Booked String
+startY -= 40; 
+page.drawText(`Seat Booked : ${JSON.stringify(ticketInfo.seat_booked_string)}`, {
+x: 50,
+y: startY,
+size: subtitleFontSize,
+font: await doc.embedFont(StandardFonts.TimesRoman),
+color: rgb(0.2, 0.2, 0.2)
 });
 
 // Draw Total Fare
 page.drawText(`Total Fare: Tk ${ticketInfo.amount}`, {
-    x: 450,
-    y: startY,
-    size: subtitleFontSize,
-    font: await doc.embedFont(StandardFonts.TimesRomanBold),
-    color: rgb(0.2, 0.2, 0.2)
+x: 450,
+y: startY,
+size: subtitleFontSize,
+font: await doc.embedFont(StandardFonts.TimesRomanBold),
+color: rgb(0.2, 0.2, 0.2)
 });
 
-    // Draw license info details similarly
+// Draw license info details similarly
 
-    // Save the PDF
-    const filePath = "./ticket#"+`${transactionId}`+".pdf";
-  fs.writeFileSync(filePath, await doc.save());
+// Save the PDF
+const filePath = "./ticket#"+`${transactionId}`+".pdf";
+fs.writeFileSync(filePath, await doc.save());
 
-  // Create a Nodemailer transporter
+// Create a Nodemailer transporter
 
 // Compose an email
-    transporter.sendMail({
-      from : 'Tarik <'+config.email+'>',
-      to : 'shafiulhaque982@gmail.com',
-      subject: "Place Order",
-      html: `<h1> Heading </h1>
-          <p> This is nodemailer </p>`,
-      attachments:[
-          {
-              filename:'Train_Ticket'+`${transactionId}`+".pdf", 
-              path:filePath
-          }
-      ]
-    },(err,info) => {
-      if(err) throw err;
+transporter.sendMail({
+  from : 'Tarik <'+config.email+'>',
+  to : 'shafiulhaque982@gmail.com',
+  subject: "Place Order",
+  html: `<h1> Heading </h1>
+      <p> This is nodemailer </p>`,
+  attachments:[
+      {
+          filename:'Train_Ticket'+`${transactionId}`+".pdf", 
+          path:filePath
+      }
+  ]
 
-      res.json({status:info.response})
-    })
+},(err,info) => {
+  if(err) throw err;
 
+  res.json({status:info.response})
+})
+
+return res.status(200).json(
+  {
+    status : 'success',
+    data: req.body,
+    message: 'Payment success'
+  }
+);
   } catch {
-
+      console.log("ekhane err")
     }
 
 
 
 
   // trainPool.query('COMMIT');
-  return res.status(200).json(
-    {
-      status : 'success',
-      data: req.body,
-      message: 'Payment success'
-    }
-  );
+
 
 
 } 
 
 const ticket = async ( req , res ) => {
   
-    try {
+try {
         // Retrieve ticket information from the database
-        const transactionId = req.body.transactionId;
-        const getTicketInfo = {
-            text: `SELECT * FROM "info" WHERE transaction_id = $1`,
-            values: [transactionId]
-        };
-        const result2 = await trainPool.query(getTicketInfo);
-        const ticketInfo = result2.rows[0];
+      const transactionId = req.body.transactionId;
+      const getTicketInfo = {
+          text: `SELECT * FROM "info" WHERE transaction_id = $1`,
+          values: [transactionId]
+      };
+      const result2 = await trainPool.query(getTicketInfo);
+      const ticketInfo = result2.rows[0];
+      console.log("ticketInfo",ticketInfo)
 
-        // Retrieve client information
-        const username = ticketInfo.username;
-        const getUserEmailQuery = {
-            text: `SELECT * FROM "clients" WHERE username = $1`,
-            values: [username]
-        };
-        const result3 = await accountPool.query(getUserEmailQuery);
-        const clientInfo = result3.rows[0];
+      // Retrieve client information
+      const username = ticketInfo.username;
+      const getUserEmailQuery = {
+          text: `SELECT * FROM "clients" WHERE username = $1`,
+          values: [username]
+      };
+      const result3 = await accountPool.query(getUserEmailQuery);
+      const clientInfo = result3.rows[0];
+      console.log("clientInfo",clientInfo)
 
-        // Retrieve air schedule information
-        const schedule_id = ticketInfo.schedule_id;
+      // Retrieve air schedule information
+      const schedule_id = ticketInfo.schedule_id;
 
-        const getTrainScheduleInfoQuery = {
-            text: `SELECT * FROM "train_schedule_info" WHERE schedule_id = $1`,
-            values: [schedule_id]
-        };
-        const result4 = await trainPool.query(getTrainScheduleInfoQuery);
-        const airScheduleInfo = result4.rows[0];
+      const getTrainScheduleInfoQuery = {
+          text: `SELECT * FROM "train_schedule_info" WHERE schedule_id = $1`,
+          values: [schedule_id]
+      };
+      const result4 = await trainPool.query(getTrainScheduleInfoQuery);
+      const airScheduleInfo = result4.rows[0];
+      console.log("airscheduleinfo" , airScheduleInfo)
+      // Retrieve air services information
+      const train_id = airScheduleInfo.train_id;
+      const getTrainServicesQuery = {
+          text: `SELECT * FROM "train_services" WHERE train_id = $1`,
+          values: [train_id]
+      };
+      const result5 = await trainPool.query(getTrainServicesQuery);
+      const airServices = result5.rows[0];
+      console.log('airservices',airServices)
 
-        // Retrieve air services information
-        const train_id = airScheduleInfo.train_id;
-        const getTrainServicesQuery = {
-            text: `SELECT * FROM "train_services" WHERE train_id = $1`,
-            values: [train_id]
-        };
-        const result5 = await trainPool.query(getTrainServicesQuery);
-        const airServices = result5.rows[0];
+      // Create a new PDF document
+      const doc = await PDFDocument.create();
+      const page = doc.addPage();
+      const { width, height } = page.getSize();
 
-        // Create a new PDF document
-        const doc = await PDFDocument.create();
-        const page = doc.addPage();
-        const { width, height } = page.getSize();
+      // Set font sizes
+      const titleFontSize = 25;
+      const subtitleFontSize = 12;
+      const textFontSize = 10;
 
-        // Set font sizes
-        const titleFontSize = 25;
-        const subtitleFontSize = 12;
-        const textFontSize = 10;
-
-        // Add title
-        page.drawText("e-TravelKit Ticket", {
-            x: 50,
-            y: height - 4 * titleFontSize,
-            size: titleFontSize,
-            font: await doc.embedFont(StandardFonts.TimesRoman),
-            color: rgb(1.0, 0.8, 0)
-        });
-        // Draw client information
-        let startY = height - 150;
-        page.drawText(`Name : ${clientInfo.name}`, {
-            x: 50,
-            y: startY,
-            size: subtitleFontSize,
-            font: await doc.embedFont(StandardFonts.TimesRomanBold),
-            color: rgb(0.2, 0.2, 0.2)
-        });
-
-        startY -= 20;
-        page.drawText(`Email  : ${clientInfo.email}`, {
-            x: 50,
-            y: startY,
-            size: subtitleFontSize,
-            font: await doc.embedFont(StandardFonts.TimesRoman),
-            color: rgb(0.2, 0.2, 0.2)
-        });
-
-        startY -= 20;
-        page.drawText(`Phone  : ${clientInfo.phone}`, {
-            x: 50,
-            y: startY,
-            size: subtitleFontSize,
-            font: await doc.embedFont(StandardFonts.TimesRoman),
-            color: rgb(0.2, 0.2, 0.2)
-        });
-
-        // Extract the client's date of birth
-        const clientDOB = new Date(clientInfo.date_of_birth);
-
-        // Format the date to "12 DEC 1998" format
-        const formattedDOB = `${clientDOB.getDate()} ${clientDOB.toLocaleString('default', { month: 'short' })} ${clientDOB.getFullYear()}`;
-        
-        
-        const today = new Date();
-        let age = today.getFullYear() - clientDOB.getFullYear();
-        const monthDiff = today.getMonth() - clientDOB.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < clientDOB.getDate())) {
-            age--;
-        }
-
-        startY -= 20;
-        page.drawText(`Age  : ${age} years`, {
-            x: 50,
-            y: startY,
-            size: subtitleFontSize,
-            font: await doc.embedFont(StandardFonts.TimesRoman),
-            color: rgb(0.2, 0.2, 0.2)
-        });
-
-        // Draw a horizontal line
-        const lineY = startY - 20;
-        page.drawLine({
-            start: { x: 50, y: lineY },
-            end: { x: width - 50, y: lineY },
-            color: rgb(0.3, 0.5, 1.0),
-            thickness: 1
-        });
-
-        // Flight Details
-        startY -= 40;
-        page.drawText(`Flight Details :`, {
-            x: 50,
-            y: startY,
-            size: subtitleFontSize,
-            font: await doc.embedFont(StandardFonts.TimesRomanBold),
-            color: rgb(0.2, 0.2, 0.2)
-        });
-
-        // Draw company information
-        const companyY = lineY - 40;
-        page.drawText(`Company Name: ${airServices.company_name}`, {
-            x: 50,
-            y: companyY,
-            size: subtitleFontSize,
-            font: await doc.embedFont(StandardFonts.Helvetica),
-            color: rgb(0.2, 0.2, 0.2)
-        });
-
-// Draw departure and arrival information
-      // Departure Date
-      startY = companyY - 30;
-      page.drawText(`From:`, {
+      // Add title
+      page.drawText("e-TravelKit Ticket", {
+          x: 50,
+          y: height - 4 * titleFontSize,
+          size: titleFontSize,
+          font: await doc.embedFont(StandardFonts.TimesRoman),
+          color: rgb(1.0, 0.8, 0)
+      });
+      // Draw client information
+      let startY = height - 150;
+      page.drawText(`Name : ${clientInfo.name}`, {
           x: 50,
           y: startY,
           size: subtitleFontSize,
-          font: await doc.embedFont(StandardFonts.Helvetica),
-          color: rgb(0.2, 0.2, 0.2)
-      });
-      page.drawText(`${airScheduleInfo.from_port}`, {
-          x: 150,
-          y: startY,
-          size: subtitleFontSize,
-          font: await doc.embedFont(StandardFonts.Helvetica),
+          font: await doc.embedFont(StandardFonts.TimesRomanBold),
           color: rgb(0.2, 0.2, 0.2)
       });
 
-      // To Location
-      page.drawText(`To:`, {
-        x: 300, // Adjust as needed
-        y: startY, // Same startY as Departure Date
-        size: subtitleFontSize,
-        font: await doc.embedFont(StandardFonts.Helvetica),
-        color: rgb(0.2, 0.2, 0.2)
+      startY -= 20;
+      page.drawText(`Email  : ${clientInfo.email}`, {
+          x: 50,
+          y: startY,
+          size: subtitleFontSize,
+          font: await doc.embedFont(StandardFonts.TimesRoman),
+          color: rgb(0.2, 0.2, 0.2)
       });
-      page.drawText(`${airScheduleInfo.to_port}`, {
-        x: 400, // Adjust as needed
-        y: startY, // Same startY as Departure Date
-        size: subtitleFontSize,
-        font: await doc.embedFont(StandardFonts.Helvetica),
-        color: rgb(0.2, 0.2, 0.2)
+
+      startY -= 20;
+      page.drawText(`Phone  : ${clientInfo.phone}`, {
+          x: 50,
+          y: startY,
+          size: subtitleFontSize,
+          font: await doc.embedFont(StandardFonts.TimesRoman),
+          color: rgb(0.2, 0.2, 0.2)
       });
+
+      // Extract the client's date of birth
+      const clientDOB = new Date(clientInfo.date_of_birth);
+
+      // Format the date to "12 DEC 1998" format
+      const formattedDOB = `${clientDOB.getDate()} ${clientDOB.toLocaleString('default', { month: 'short' })} ${clientDOB.getFullYear()}`;
       
+      
+      const today = new Date();
+      let age = today.getFullYear() - clientDOB.getFullYear();
+      const monthDiff = today.getMonth() - clientDOB.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < clientDOB.getDate())) {
+          age--;
+      }
+
       startY -= 20;
-      page.drawText(`Departure Date:`, {
+      page.drawText(`Age  : ${age} years`, {
           x: 50,
           y: startY,
           size: subtitleFontSize,
-          font: await doc.embedFont(StandardFonts.Helvetica),
-          color: rgb(0.2, 0.2, 0.2)
-      });
-      // Extract the departure date components
-      const departureDate = new Date(airScheduleInfo.departure_date);
-      const day = departureDate.getDate();
-      const month = departureDate.toLocaleString('default', { month: 'short' });
-      const year = departureDate.getFullYear();
-
-      // Format the departure date
-      const formattedDepartureDate = `${day} ${month} ${year}`;
-      page.drawText(`${formattedDepartureDate}`, {
-          x: 150,
-          y: startY,
-          size: subtitleFontSize,
-          font: await doc.embedFont(StandardFonts.Helvetica),
+          font: await doc.embedFont(StandardFonts.TimesRoman),
           color: rgb(0.2, 0.2, 0.2)
       });
 
-      // Arrival Date
-      page.drawText(`Arrival Date:`, {
-        x: 300, // Adjust as needed
-        y: startY,
-        size: subtitleFontSize,
-        font: await doc.embedFont(StandardFonts.Helvetica),
-        color: rgb(0.2, 0.2, 0.2)
-      });
-      const arrivalDate = new Date(airScheduleInfo.arrival_date);
-      const arrivalDay = arrivalDate.getDate();
-      const arrivalMonth = arrivalDate.toLocaleString('default', { month: 'short' });
-      const arrivalYear = arrivalDate.getFullYear();
-      const formattedArrivalDate = `${arrivalDay} ${arrivalMonth} ${arrivalYear}`;
-      page.drawText(`${formattedArrivalDate}`, {
-        x: 400, // Adjust as needed
-        y: startY,
-        size: subtitleFontSize,
-        font: await doc.embedFont(StandardFonts.Helvetica),
-        color: rgb(0.2, 0.2, 0.2)
-      });
-
-      // Departure Time (Assuming departureTime variable is defined)
-      startY -= 20;
-      page.drawText(`Departure Time:`, {
-          x: 50,
-          y: startY,
-          size: subtitleFontSize,
-          font: await doc.embedFont(StandardFonts.Helvetica),
-          color: rgb(0.2, 0.2, 0.2)
-      });
-      page.drawText(`${airScheduleInfo.departure_time}`, {
-          x: 150,
-          y: startY,
-          size: subtitleFontSize,
-          font: await doc.embedFont(StandardFonts.Helvetica),
-          color: rgb(0.2, 0.2, 0.2)
-      });
-
-      // Arrival Time
-      page.drawText(`Arrival Time:`, {
-        x: 300, // Adjust as needed
-        y: startY,
-        size: subtitleFontSize,
-        font: await doc.embedFont(StandardFonts.Helvetica),
-        color: rgb(0.2, 0.2, 0.2)
-      });
-      page.drawText(`${airScheduleInfo.arrival_time}`, {
-        x: 400, // Adjust as needed
-        y: startY,
-        size: subtitleFontSize,
-        font: await doc.embedFont(StandardFonts.Helvetica),
-        color: rgb(0.2, 0.2, 0.2)
-      });
-
-      startY -= 20;
+      // Draw a horizontal line
+      const lineY = startY - 20;
       page.drawLine({
-          start: { x: 50, y: startY },
-          end: { x: width - 50, y: startY },
+          start: { x: 50, y: lineY },
+          end: { x: width - 50, y: lineY },
           color: rgb(0.3, 0.5, 1.0),
           thickness: 1
       });
-      
-        // Draw Seat Booked String
-        startY -= 40; 
-        page.drawText(`Seat Booked : ${ticketInfo.seat_booked_string}`, {
-            x: 50,
-            y: startY,
-            size: subtitleFontSize,
-            font: await doc.embedFont(StandardFonts.TimesRoman),
-            color: rgb(0.2, 0.2, 0.2)
-        });
 
-        // Draw Total Fare
-        page.drawText(`Total Fare: Tk ${ticketInfo.amount}`, {
-            x: 450,
-            y: startY,
-            size: subtitleFontSize,
-            font: await doc.embedFont(StandardFonts.TimesRomanBold),
-            color: rgb(0.2, 0.2, 0.2)
-        });
+      // Flight Details
+      startY -= 40;
+      page.drawText(`Flight Details :`, {
+          x: 50,
+          y: startY,
+          size: subtitleFontSize,
+          font: await doc.embedFont(StandardFonts.TimesRomanBold),
+          color: rgb(0.2, 0.2, 0.2)
+      });
 
+      // Draw company information
+      const companyY = lineY - 40;
+      page.drawText(`Company Name: ${airServices.company_name}`, {
+          x: 50,
+          y: companyY,
+          size: subtitleFontSize,
+          font: await doc.embedFont(StandardFonts.Helvetica),
+          color: rgb(0.2, 0.2, 0.2)
+      });
 
-        // Save the PDF
-        const filePath = "./ticket.pdf";
-        fs.writeFileSync(filePath, await doc.save());
-        
+// Draw departure and arrival information
+    // Departure Date
+    startY = companyY - 30;
+    page.drawText(`From:`, {
+        x: 50,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.Helvetica),
+        color: rgb(0.2, 0.2, 0.2)
+    });
+    page.drawText(`${airScheduleInfo.routes[0].start}`, {
+        x: 150,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.Helvetica),
+        color: rgb(0.2, 0.2, 0.2)
+    });
+
+    // To Location
+    page.drawText(`To:`, {
+      x: 300, // Adjust as needed
+      y: startY, // Same startY as Departure Date
+      size: subtitleFontSize,
+      font: await doc.embedFont(StandardFonts.Helvetica),
+      color: rgb(0.2, 0.2, 0.2)
+    });
+    page.drawText(`${airScheduleInfo.routes[airScheduleInfo.routes.length-1].start}`, {
+      x: 400, // Adjust as needed
+      y: startY, // Same startY as Departure Date
+      size: subtitleFontSize,
+      font: await doc.embedFont(StandardFonts.Helvetica),
+      color: rgb(0.2, 0.2, 0.2)
+    });
+    
+    startY -= 20;
+    page.drawText(`Departure Date:`, {
+        x: 50,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.Helvetica),
+        color: rgb(0.2, 0.2, 0.2)
+    });
+    // Extract the departure date components
+    const departureDate = new Date(airScheduleInfo.routes[0].date);
+    const day = departureDate.getDate();
+    const month = departureDate.toLocaleString('default', { month: 'short' });
+    const year = departureDate.getFullYear();
+
+    // Format the departure date
+    const formattedDepartureDate = `${day} ${month} ${year}`;
+    page.drawText(`${formattedDepartureDate}`, {
+        x: 150,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.Helvetica),
+        color: rgb(0.2, 0.2, 0.2)
+    });
+
+    // Arrival Date
+    page.drawText(`Arrival Date:`, {
+      x: 300, // Adjust as needed
+      y: startY,
+      size: subtitleFontSize,
+      font: await doc.embedFont(StandardFonts.Helvetica),
+      color: rgb(0.2, 0.2, 0.2)
+    });
+    const arrivalDate = new Date(airScheduleInfo.routes[airScheduleInfo.routes.length-1].date);
+    const arrivalDay = arrivalDate.getDate();
+    const arrivalMonth = arrivalDate.toLocaleString('default', { month: 'short' });
+    const arrivalYear = arrivalDate.getFullYear();
+    const formattedArrivalDate = `${arrivalDay} ${arrivalMonth} ${arrivalYear}`;
+    page.drawText(`${formattedArrivalDate}`, {
+      x: 400, // Adjust as needed
+      y: startY,
+      size: subtitleFontSize,
+      font: await doc.embedFont(StandardFonts.Helvetica),
+      color: rgb(0.2, 0.2, 0.2)
+    });
+
+    // Departure Time (Assuming departureTime variable is defined)
+    startY -= 20;
+    page.drawText(`Departure Time:`, {
+        x: 50,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.Helvetica),
+        color: rgb(0.2, 0.2, 0.2)
+    });
+    page.drawText(`${airScheduleInfo.routes[0].departure_time}`, {
+        x: 150,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.Helvetica),
+        color: rgb(0.2, 0.2, 0.2)
+    });
+
+    // Arrival Time
+    page.drawText(`Arrival Time:`, {
+      x: 300, // Adjust as needed
+      y: startY,
+      size: subtitleFontSize,
+      font: await doc.embedFont(StandardFonts.Helvetica),
+      color: rgb(0.2, 0.2, 0.2)
+    });
+    page.drawText(`${airScheduleInfo.routes[airScheduleInfo.routes.length-1].departure_time}`, {
+      x: 400, // Adjust as needed
+      y: startY,
+      size: subtitleFontSize,
+      font: await doc.embedFont(StandardFonts.Helvetica),
+      color: rgb(0.2, 0.2, 0.2)
+    });
+
+    startY -= 20;
+    page.drawLine({
+        start: { x: 50, y: startY },
+        end: { x: width - 50, y: startY },
+        color: rgb(0.3, 0.5, 1.0),
+        thickness: 1
+    });
+    
+// Draw Seat Booked String
+startY -= 40; 
+page.drawText(`Seat Booked : ${JSON.stringify(ticketInfo.seat_booked_string)}`, {
+  x: 50,
+  y: startY,
+  size: subtitleFontSize,
+  font: await doc.embedFont(StandardFonts.TimesRoman),
+  color: rgb(0.2, 0.2, 0.2)
+});
+
+// Draw Total Fare
+page.drawText(`Total Fare: Tk ${ticketInfo.amount}`, {
+  x: 450,
+  y: startY,
+  size: subtitleFontSize,
+  font: await doc.embedFont(StandardFonts.TimesRomanBold),
+  color: rgb(0.2, 0.2, 0.2)
+});
+
+  // Draw license info details similarly
+
+  // Save the PDF
+  const filePath = "./ticket#"+`${transactionId}`+".pdf";
+fs.writeFileSync(filePath, await doc.save());
+
+// Create a Nodemailer transporter
+
+// Compose an email
+  transporter.sendMail({
+    from : 'Tarik <'+config.email+'>',
+    to : 'shafiulhaque982@gmail.com',
+    subject: "Place Order",
+    html: `<h1> Heading </h1>
+        <p> This is nodemailer </p>`,
+    attachments:[
+        {
+            filename:'Train_Ticket'+`${transactionId}`+".pdf", 
+            path:filePath
+        }
+    ]
+  },(err,info) => {
+    if(err) throw err;
+
+    res.json({status:info.response})
+  })
         
 
         // Return success response with the PDF file path
-        return res.status(200).json({
-            status: 'success',
-            data: req.body,
-            message: 'Ticket created successfully',
-            filePath: filePath
-        });
-    } catch (error) {
+    return res.status(200).json({
+        status: 'success',
+        data: req.body,
+        message: 'Ticket created successfully',
+        filePath: filePath
+    });
+  } catch (error) {
         console.log("Error:", error);
         return res.status(500).json({
             status: 'error',
             message: 'An error occurred while creating the ticket'
         });
-    }
+  }
   
-
-
-  // ticket print pdf
-  
-       
-  
-
-  // trainPool.query('COMMIT');
-  return res.status(200).json(
-    {
-      status : 'success',
-      data: req.body,
-      message: 'Payment success'
-    }
-  );
 }
 
 

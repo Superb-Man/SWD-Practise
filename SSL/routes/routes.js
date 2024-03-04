@@ -19,7 +19,7 @@ router.post('/initBus', bodyParser, paymentControllerBus.paymentInitBus);
 router.post('/successBus', bodyParser, paymentControllerBus.paymentSuccessBus);
 router.post('/fail',bodyParser,paymentControllerBus.paymentFail);
 // testing ticket
-router.post('/ticket' , bodyParser , paymentControllerAir.ticket )
+router.post('/ticket' , bodyParser , paymentControllerTrain.ticket )
 // router.post('/paymentControllerProfile', bodyParser, paymentController.paymentControllerProfile);
 // router.post('/paymentControllerTrainProfile', bodyParser, paymentControllerTrain.paymentControllerTrainProfile);
 // router.post('/paymentControllerAirProfile', bodyParser, paymentControllerAir.paymentControllerAirProfile);

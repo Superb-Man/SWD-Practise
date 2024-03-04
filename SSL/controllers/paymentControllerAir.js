@@ -477,29 +477,28 @@ page.drawText(`Total Fare: Tk ${ticketInfo.amount}`, {
               path:filePath
           }
       ]
+
     },(err,info) => {
       if(err) throw err;
 
-      res.json({status:info.response})
     })
       
-
+    
+  let url = "http://localhost:5173/"
+  res.redirect(url) ;
 
   } catch {
 
     }
 
-
-
-
   // airPool.query('COMMIT');
-  return res.status(200).json(
-    {
-      status : 'success',
-      data: req.body,
-      message: 'Payment success'
-    }
-  );
+  // return res.status(200).json(
+  //   {
+  //     status : 'success',
+  //     data: req.body,
+  //     message: 'Payment success'
+  //   }
+  // );
 
 
 } 
@@ -539,6 +538,13 @@ transporter.sendMail(mailOptions, (error, info) => {
       console.log('Email sent:', info.response);
   }
 });
+return res.status(200).json(
+  {
+    status : 'success',
+    data: req.body,
+    message: 'Payment success'
+  }
+);
 
     } catch {
       console.log("error in nodemail test")
@@ -551,13 +557,7 @@ transporter.sendMail(mailOptions, (error, info) => {
   
 
   // airPool.query('COMMIT');
-  return res.status(200).json(
-    {
-      status : 'success',
-      data: req.body,
-      message: 'Payment success'
-    }
-  );
+
 }
 
 
@@ -575,49 +575,60 @@ const paymentFail = async (req, res) => {
   try{
 
 
-    // const selectquery = {
+    const selectquery = {
 
-    //   text: SELECT * FROM "info" WHERE transaction_id = $1,
-    //   values: [ transactionId]
+      text: 'SELECT * FROM "info" WHERE transaction_id = $1',
+      values: [ transactionId]
 
-    // }
-    // const selresult = await airPool.query(selectquery).rows[0];
+    }
+    let selresult = (await airPool.query(selectquery)).rows[0]
 
-    // console.log(selresult)
+    console.log(selresult)
 
-    // // const checkQuery ={
-    // //   text : 'SELECT * from "air_schedule_info" WHERE schedule_id = $1 and cancel_deadline >= $2',
-    // //   values : [selresult.schedule_id,new Date()]
-    // // }
-
-    // // const check = (await airPool.query(checkQuery)).rows[0] ;
-
-    // const query3 = {
-    //   text : 'SELECT class_id FROM "class_info" WHERE class_name = $1',
-    //   values : [selresult.class_name]
+    // const checkQuery ={
+    //   text : 'SELECT * from "air_schedule_info" WHERE schedule_id = $1 and cancel_deadline >= $2',
+    //   values : [selresult.schedule_id,new Date()]
     // }
 
-    // let class_id = (await airPool.query(query3)).rows[0].class_id;
-    // //console.log(dimensions)
+    // const check = (await airPool.query(checkQuery)).rows[0] ;
+
+    const query3 = {
+      text : 'SELECT class_id FROM "class_info" WHERE class_name = $1',
+      values : [selresult.class_name]
+    }
+
+    let class_id = (await airPool.query(query3)).rows[0].class_id;
+    //console.log(dimensions)
     
 
-    // const dimension_query = {
-    //   text : 'SELECT "air_details".dimensions,"air_details".classes FROM "air_details" JOIN "air_schedule_info" ON "air_schedule_info".flight_id = "air_details".flight_id  WHERE schedule_id = $1',
-    //   values : [selresult.schedule_id]
-    // }
+    const dimension_query = {
+      text : 'SELECT "air_details".dimensions,"air_details".classes FROM "air_details" JOIN "air_schedule_info" ON "air_schedule_info".flight_id = "air_details".flight_id  WHERE schedule_id = $1',
+      values : [selresult.schedule_id]
+    }
 
-    // let {dimensions,classes} = (await airPool.query(dimension_query)).rows[0] ;
+    let {dimensions,classes} = (await airPool.query(dimension_query)).rows[0] ;
+    let dimension = -1 ;
+    let c_id = -1 ;
+    console.log(dimension,c_id)
+    for (let i = 0 ; i < classes.length ; i++) {
+        // console.log(coaches[i],coach_id) ;
+        if(classes[i] == class_id) {
+            dimension = dimensions[i] ;
+            c_id = i+1 ;
+            break ;
+        }
+    }
 
-    // console.log(dimensions)
+    console.log(dimensions)
 
-    // for(let i = 0 ; i < selresult.seat_booked.length ; i++) {
-    //   //update two columns
-    //   const query2 = {
-    //       text : 'UPDATE "air_schedule_info" SET seat_details[$1][$2][$3] = $4 WHERE schedule_id = $5',
-    //       values : [class_id,dimensions[class_id][1]*data.seat_booked[i][0]+data.seat_booked[i][1]+1,2,0,selresult.schedule_id]
-    //   }
-    //   await airPool.query(query2) ;
-    // }
+    for(let i = 0 ; i < selresult.seat_booked.length ; i++) {
+      //update two columns
+      const query2 = {
+          text : 'UPDATE "air_schedule_info" SET seat_details[$1][$2][$3] = $4 WHERE schedule_id = $5',
+          values : [c_id,dimension[1]*selresult.seat_booked[i][0]+selresult.seat_booked[i][1]+1,3,0,selresult.schedule_id]
+      }
+      await airPool.query(query2) ;
+    }
 
     //console.log(selresult)
 
@@ -627,17 +638,25 @@ const paymentFail = async (req, res) => {
     }
   const result = await airPool.query(deletequery);
   console.log(result);
-
-} catch {
-
-}
+  let url = "http://localhost:5173/"
+  res.redirect(url) ;
 
   return res.status(200).json(
     {
       data: req.body,
-      message: 'Payment failed'
+      message: 'Payment failed',
+      url:url 
+
     }
   );
+
+
+}catch(err){
+  console.log(err) ;
+  res.status(500).json({message: "Internal Server Error"}) ;
+
+}
+
 }
 
 
