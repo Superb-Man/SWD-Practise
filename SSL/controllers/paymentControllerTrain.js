@@ -69,7 +69,7 @@ const paymentInitTrain = async (req, res) => {
     currency: 'BDT',
     tran_id: transactionId,
     success_url: successUrl,
-    fail_url: `${mainUrl}/fail`,
+    fail_url: `${mainUrl}/failTrain`,
     cancel_url: `${mainUrl}/paymentCancel`,
     ipn_url: `${mainUrl}/paymentIpn`,
     shipping_method: 'No',
@@ -193,7 +193,7 @@ const paymentSuccessTrain =  async (req, res) => {
     };
     const result2 = await trainPool.query(getTicketInfo);
     const ticketInfo = result2.rows[0];
-    console.log("ticketInfo",ticketInfo)
+    console.log("ticketInfo",result2)
 
     // Retrieve client information
     const username = ticketInfo.username;
@@ -303,170 +303,226 @@ const paymentSuccessTrain =  async (req, res) => {
         thickness: 1
     });
 
-    // Flight Details
-    startY -= 40;
-    page.drawText(`Flight Details :`, {
+
+   
+
+      // Flight Details
+      startY -= 40;
+      page.drawText(`Flight Details :`, {
+          x: 50,
+          y: startY,
+          size: subtitleFontSize,
+          font: await doc.embedFont(StandardFonts.TimesRomanBold),
+          color: rgb(0.2, 0.2, 0.2)
+      });
+
+      // Draw company information
+      const companyY = lineY - 40;
+      page.drawText(`Company Name: ${airServices.company_name}`, {
+          x: 50,
+          y: companyY,
+          size: subtitleFontSize,
+          font: await doc.embedFont(StandardFonts.Helvetica),
+          color: rgb(0.2, 0.2, 0.2)
+      });
+
+// Draw departure and arrival information
+    // Departure Date
+    startY = companyY - 30;
+    page.drawText(`From:`, {
         x: 50,
         y: startY,
         size: subtitleFontSize,
-        font: await doc.embedFont(StandardFonts.TimesRomanBold),
+        font: await doc.embedFont(StandardFonts.Helvetica),
         color: rgb(0.2, 0.2, 0.2)
     });
-
-    // Draw company information
-    const companyY = lineY - 40;
-    page.drawText(`Company Name: ${airServices.company_name}`, {
-        x: 50,
-        y: companyY,
+    page.drawText(`${airScheduleInfo.routes[0].start}`, {
+        x: 150,
+        y: startY,
         size: subtitleFontSize,
         font: await doc.embedFont(StandardFonts.Helvetica),
         color: rgb(0.2, 0.2, 0.2)
     });
 
-// Draw departure and arrival information
-  // Departure Date
-  startY = companyY - 30;
-  page.drawText(`From:`, {
-      x: 50,
+    // To Location
+    page.drawText(`To:`, {
+      x: 300, // Adjust as needed
+      y: startY, // Same startY as Departure Date
+      size: subtitleFontSize,
+      font: await doc.embedFont(StandardFonts.Helvetica),
+      color: rgb(0.2, 0.2, 0.2)
+    });
+    page.drawText(`${airScheduleInfo.routes[airScheduleInfo.routes.length-1].start}`, {
+      x: 400, // Adjust as needed
+      y: startY, // Same startY as Departure Date
+      size: subtitleFontSize,
+      font: await doc.embedFont(StandardFonts.Helvetica),
+      color: rgb(0.2, 0.2, 0.2)
+    });
+    
+    startY -= 20;
+    page.drawText(`Departure Date:`, {
+        x: 50,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.Helvetica),
+        color: rgb(0.2, 0.2, 0.2)
+    });
+    // Extract the departure date components
+    const departureDate = new Date(airScheduleInfo.routes[0].date);
+    const day = departureDate.getDate();
+    const month = departureDate.toLocaleString('default', { month: 'short' });
+    const year = departureDate.getFullYear();
+
+    // Format the departure date
+    const formattedDepartureDate = `${day} ${month} ${year}`;
+    page.drawText(`${formattedDepartureDate}`, {
+        x: 150,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.Helvetica),
+        color: rgb(0.2, 0.2, 0.2)
+    });
+
+    // Arrival Date
+    page.drawText(`Arrival Date:`, {
+      x: 300, // Adjust as needed
       y: startY,
       size: subtitleFontSize,
       font: await doc.embedFont(StandardFonts.Helvetica),
       color: rgb(0.2, 0.2, 0.2)
-  });
-  page.drawText(`${airScheduleInfo.routes[0].start}`, {
-      x: 150,
+    });
+    const arrivalDate = new Date(airScheduleInfo.routes[airScheduleInfo.routes.length-1].date);
+    const arrivalDay = arrivalDate.getDate();
+    const arrivalMonth = arrivalDate.toLocaleString('default', { month: 'short' });
+    const arrivalYear = arrivalDate.getFullYear();
+    const formattedArrivalDate = `${arrivalDay} ${arrivalMonth} ${arrivalYear}`;
+    page.drawText(`${formattedArrivalDate}`, {
+      x: 400, // Adjust as needed
       y: startY,
       size: subtitleFontSize,
       font: await doc.embedFont(StandardFonts.Helvetica),
       color: rgb(0.2, 0.2, 0.2)
-  });
+    });
 
-  // To Location
-  page.drawText(`To:`, {
-    x: 300, // Adjust as needed
-    y: startY, // Same startY as Departure Date
-    size: subtitleFontSize,
-    font: await doc.embedFont(StandardFonts.Helvetica),
-    color: rgb(0.2, 0.2, 0.2)
-  });
-  page.drawText(`${airScheduleInfo.routes[airScheduleInfo.routes.length-1].start}`, {
-    x: 400, // Adjust as needed
-    y: startY, // Same startY as Departure Date
-    size: subtitleFontSize,
-    font: await doc.embedFont(StandardFonts.Helvetica),
-    color: rgb(0.2, 0.2, 0.2)
-  });
-  
-  startY -= 20;
-  page.drawText(`Departure Date:`, {
-      x: 50,
+    // Departure Time (Assuming departureTime variable is defined)
+    startY -= 20;
+    page.drawText(`Departure Time:`, {
+        x: 50,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.Helvetica),
+        color: rgb(0.2, 0.2, 0.2)
+    });
+    page.drawText(`${airScheduleInfo.routes[0].departure_time}`, {
+        x: 150,
+        y: startY,
+        size: subtitleFontSize,
+        font: await doc.embedFont(StandardFonts.Helvetica),
+        color: rgb(0.2, 0.2, 0.2)
+    });
+
+
+ 
+
+    // Arrival Time
+    page.drawText(`Arrival Time:`, {
+      x: 300, // Adjust as needed
       y: startY,
       size: subtitleFontSize,
       font: await doc.embedFont(StandardFonts.Helvetica),
       color: rgb(0.2, 0.2, 0.2)
-  });
-  // Extract the departure date components
-  const departureDate = new Date(airScheduleInfo.routes[0].date);
-  const day = departureDate.getDate();
-  const month = departureDate.toLocaleString('default', { month: 'short' });
-  const year = departureDate.getFullYear();
-
-  // Format the departure date
-  const formattedDepartureDate = `${day} ${month} ${year}`;
-  page.drawText(`${formattedDepartureDate}`, {
-      x: 150,
+    });
+    page.drawText(`${airScheduleInfo.routes[airScheduleInfo.routes.length-1].departure_time}`, {
+      x: 400, // Adjust as needed
       y: startY,
       size: subtitleFontSize,
       font: await doc.embedFont(StandardFonts.Helvetica),
       color: rgb(0.2, 0.2, 0.2)
-  });
+    });
 
-  // Arrival Date
-  page.drawText(`Arrival Date:`, {
-    x: 300, // Adjust as needed
-    y: startY,
-    size: subtitleFontSize,
-    font: await doc.embedFont(StandardFonts.Helvetica),
-    color: rgb(0.2, 0.2, 0.2)
-  });
-  const arrivalDate = new Date(airScheduleInfo.routes[airScheduleInfo.routes.length-1].date);
-  const arrivalDay = arrivalDate.getDate();
-  const arrivalMonth = arrivalDate.toLocaleString('default', { month: 'short' });
-  const arrivalYear = arrivalDate.getFullYear();
-  const formattedArrivalDate = `${arrivalDay} ${arrivalMonth} ${arrivalYear}`;
-  page.drawText(`${formattedArrivalDate}`, {
-    x: 400, // Adjust as needed
-    y: startY,
-    size: subtitleFontSize,
-    font: await doc.embedFont(StandardFonts.Helvetica),
-    color: rgb(0.2, 0.2, 0.2)
-  });
-
-  // Departure Time (Assuming departureTime variable is defined)
-  startY -= 20;
-  page.drawText(`Departure Time:`, {
-      x: 50,
-      y: startY,
-      size: subtitleFontSize,
-      font: await doc.embedFont(StandardFonts.Helvetica),
-      color: rgb(0.2, 0.2, 0.2)
-  });
-  page.drawText(`${airScheduleInfo.routes[0].departure_time}`, {
-      x: 150,
-      y: startY,
-      size: subtitleFontSize,
-      font: await doc.embedFont(StandardFonts.Helvetica),
-      color: rgb(0.2, 0.2, 0.2)
-  });
-
-  // Arrival Time
-  page.drawText(`Arrival Time:`, {
-    x: 300, // Adjust as needed
-    y: startY,
-    size: subtitleFontSize,
-    font: await doc.embedFont(StandardFonts.Helvetica),
-    color: rgb(0.2, 0.2, 0.2)
-  });
-  page.drawText(`${airScheduleInfo.routes[airScheduleInfo.routes.length-1].departure_time}`, {
-    x: 400, // Adjust as needed
-    y: startY,
-    size: subtitleFontSize,
-    font: await doc.embedFont(StandardFonts.Helvetica),
-    color: rgb(0.2, 0.2, 0.2)
-  });
-
-  startY -= 20;
-  page.drawLine({
-      start: { x: 50, y: startY },
-      end: { x: width - 50, y: startY },
-      color: rgb(0.3, 0.5, 1.0),
-      thickness: 1
-  });
-  
+    startY -= 20;
+    page.drawLine({
+        start: { x: 50, y: startY },
+        end: { x: width - 50, y: startY },
+        color: rgb(0.3, 0.5, 1.0),
+        thickness: 1
+    });
+    
 // Draw Seat Booked String
 startY -= 40; 
-page.drawText(`Seat Booked : ${JSON.stringify(ticketInfo.seat_booked_string)}`, {
-x: 50,
-y: startY,
-size: subtitleFontSize,
-font: await doc.embedFont(StandardFonts.TimesRoman),
-color: rgb(0.2, 0.2, 0.2)
+page.drawText(`Seat Booked :`, {
+  x: 50,
+  y: startY,
+  size: subtitleFontSize,
+  font: await doc.embedFont(StandardFonts.TimesRoman),
+  color: rgb(0.2, 0.2, 0.2)
 });
+
+startY -=20
+
+// const data = (ticketInfo.seat_booked_string); // Parse the JSON string into an array
+console.log(ticketInfo.seat_booked_string)
+console.log(ticketInfo.seat_booked_string.length)
+console.log(ticketInfo.seat_booked_string[0].compartment)
+// Add table content
+console.log(ticketInfo.seat_booked_string[0].seat)
+
+// const data = JSON.stringify(ticketInfo.seat_booked_string);
+
+// const page = pdfDoc.addPage();
+
+// Set up the table
+const tableWidth = 300;
+const startX = 50;
+
+const colWidth = tableWidth / 2;
+
+// Draw table headers
+page.drawText('Compartment', { 
+  x: startX, 
+  y: startY, 
+  size: 12 
+});
+page.drawText('Seat', { 
+  x: startX + colWidth, 
+  y: startY, 
+  size: 12 
+});
+
+
+startY -=15
+  for(let i=0;i<ticketInfo.seat_booked_string.length;i++)  {
+    startY = startY - 20
+    page.drawText(`${ticketInfo.seat_booked_string[i].compartment}`, { 
+      x: startX, 
+      y: startY, 
+      size: 12 
+    });
+
+    page.drawText(`${ticketInfo.seat_booked_string[i].seat}`, { 
+      x: startX +colWidth, 
+      y: startY, 
+      size: 12 
+    });
+
+}
+
 
 // Draw Total Fare
 page.drawText(`Total Fare: Tk ${ticketInfo.amount}`, {
-x: 450,
-y: startY,
-size: subtitleFontSize,
-font: await doc.embedFont(StandardFonts.TimesRomanBold),
-color: rgb(0.2, 0.2, 0.2)
+  x: 450,
+  y: startY-60,
+  size: subtitleFontSize,
+  font: await doc.embedFont(StandardFonts.TimesRomanBold),
+  color: rgb(0.2, 0.2, 0.2)
 });
 
-// Draw license info details similarly
+  // Draw license info details similarly
 
-// Save the PDF
-const filePath = "./ticket#"+`${transactionId}`+".pdf";
-fs.writeFileSync(filePath, await doc.save());
+  // Save the PDF
+  const filePath = "./ticket#"+`${transactionId}`+".pdf";
+  fs.writeFileSync(filePath, await doc.save());
 
 // Create a Nodemailer transporter
 
@@ -483,13 +539,13 @@ transporter.sendMail({
           path:filePath
       }
   ]
+  
 
 },(err,info) => {
   if(err) throw err;
 
   res.json({status:info.response})
 })
-
 return res.status(200).json(
   {
     status : 'success',
@@ -497,11 +553,12 @@ return res.status(200).json(
     message: 'Payment success'
   }
 );
+
+
+
   } catch {
       console.log("ekhane err")
     }
-
-
 
 
   // trainPool.query('COMMIT');
@@ -896,6 +953,73 @@ const paymentFail = async (req, res) => {
 
     //console.log(selresult)
 
+    const query0 = {
+      text : 'SELECT * FROM "info" WHERE transaction_id = $1',
+      values : [transactionId]
+  }
+
+  console.log("Data : ")
+  const data = (await trainPool.query(query0)).rows[0] ;
+  console.log(data) ;
+
+  //check if the cancel date in schedule info is bigger than today
+  const checkQuery ={
+      text : 'SELECT * from "train_schedule_info" WHERE schedule_id = $1 and cancel_deadline >= $2',
+      values : [data.schedule_id,new Date()]
+  }
+  const check = (await trainPool.query(checkQuery)).rows[0] ;
+  if(check.length == 0) {
+      res.status(400).json({message: "Can't cancel the booking"}) ;
+      return ;
+  }
+  //delete the entry from the info table using id
+  // const query1 = {
+  //     text : 'DELETE FROM "info" WHERE ticket_id = $1',
+  //     values : [obj.ticket_id]
+  // }
+  // await trainPool.query(query1) ;
+
+  const query3 = {
+      text : 'SELECT coach_id FROM "coach_info" WHERE coach_name = $1',
+      values : [data.coach_name]
+  }
+  let coach_id = (await trainPool.query(query3)).rows[0].coach_id;
+
+  console.log(coach_id) ;
+  console.log("temporarySeatBooking") ;
+  console.log(data) ;
+  const dimension_query = {
+      text : 'SELECT "train_details".dimensions,"train_details".coaches FROM "train_details" JOIN "train_schedule_info" ON "train_schedule_info".train_uid = "train_details".train_uid  WHERE schedule_id = $1',
+      values : [data.schedule_id]
+  }
+
+  let dimension = -1 ;
+  let c_id = -1 ;
+  console.log(dimension,c_id)
+  let {dimensions,coaches} = (await trainPool.query(dimension_query)).rows[0] ;
+  for (let i = 0 ; i < coaches.length ; i++) {
+      console.log(coaches[i],coach_id) ;
+      if(coaches[i] == coach_id) {
+          dimension = dimensions[i] ;
+          c_id = i+1 ;
+          break ;
+      }
+  }
+  console.log(dimension,c_id)
+  // console.log(data.booked_details.length)
+  for(let i = 0 ; i < data.seat_booked.length ; i++) {
+      //update two collumns
+      const query2 = {
+          text : 'UPDATE "train_schedule_info" SET seat_details[$1][$2][$3] = $4 WHERE schedule_id = $5',
+          values : [c_id,dimension[1]*(data.seat_booked[i][3]*dimension[2] + data.seat_booked[i][0] )+data.seat_booked[i][1]+1,3,0,data.schedule_id]
+      }
+      await trainPool.query(query2) ;
+  }
+
+  //res.status(200).json({message: "Booking Cancelled"}) ;
+
+  
+
     const deletequery = {
         text: `DELETE from "info" WHERE transaction_id = $1`,
         values: [ transactionId]
@@ -903,7 +1027,9 @@ const paymentFail = async (req, res) => {
   const result = await trainPool.query(deletequery);
   console.log(result);
 
-} catch {
+} catch(err) {
+
+  console.log(err);
 
 }
 

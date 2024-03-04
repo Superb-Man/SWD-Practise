@@ -9,15 +9,15 @@ const router = express.Router();
 
 router.post('/initAir', bodyParser, paymentControllerAir.paymentInitAir);
 router.post('/successAir', bodyParser, paymentControllerAir.paymentSuccessAir);
-router.post('/fail', bodyParser, paymentControllerAir.paymentFail);
+router.post('/failAir', bodyParser, paymentControllerAir.paymentFail);
 
 router.post('/initTrain', bodyParser, paymentControllerTrain.paymentInitTrain);
 router.post('/successTrain', bodyParser, paymentControllerTrain.paymentSuccessTrain);
-router.post('/fail',bodyParser,paymentControllerTrain.paymentFail);
+router.post('/failTrain',bodyParser,paymentControllerTrain.paymentFail);
 
 router.post('/initBus', bodyParser, paymentControllerBus.paymentInitBus);
 router.post('/successBus', bodyParser, paymentControllerBus.paymentSuccessBus);
-router.post('/fail',bodyParser,paymentControllerBus.paymentFail);
+router.post('/failBus',bodyParser,paymentControllerBus.paymentFail);
 // testing ticket
 router.post('/ticket' , bodyParser , paymentControllerTrain.ticket )
 // router.post('/paymentControllerProfile', bodyParser, paymentController.paymentControllerProfile);

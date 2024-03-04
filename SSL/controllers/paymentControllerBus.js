@@ -56,7 +56,7 @@ const paymentInitBus = async (req, res) => {
     currency: 'BDT',
     tran_id: transactionId,
     success_url: successUrl,
-    fail_url: `${mainUrl}/fail`,
+    fail_url: `${mainUrl}/failBus`,
     cancel_url: `${mainUrl}/paymentCancel`,
     ipn_url: `${mainUrl}/paymentIpn`,
     shipping_method: 'No',
