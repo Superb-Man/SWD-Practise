@@ -21,7 +21,7 @@ const temporarySeatBooking = async (req, res) => {
     // obj = req.body ;
     let obj = req.body ;
 
-    console.log(obj)
+    console.log("Debug",obj)
 
     //transaction starting
 
@@ -67,12 +67,16 @@ const temporarySeatBooking = async (req, res) => {
                 }
             }
             console.log(dimension,c_id)
-            console.log(obj.booked_details.length)
+            console.log(obj.booked_details.length,obj.booked_details)
             for(let i = 0 ; i < obj.booked_details.length ; i++) {
                 //update two collumns
+                // console.log(obj.booked_details)
+                // let temp = obj.booked_details[i]
+                // obj.booked_details[i][0] = obj.booked_details[i][2]*dimension[2] + obj.booked_details[i][0] 
+                // console.log('row : ',obj.booked_details[i][0]) ;
                 const query2 = {
                     text : 'UPDATE "train_schedule_info" SET seat_details[$1][$2][$3] = $4 WHERE schedule_id = $5',
-                    values : [c_id,dimension[1]*obj.booked_details[i][0]+obj.booked_details[i][1]+1,3,1,obj.schedule_id]
+                    values : [c_id,dimension[1]*(obj.booked_details[i][3]*dimension[2] + obj.booked_details[i][0] )+obj.booked_details[i][1]+1,3,1,obj.schedule_id]
                 }
                 await trainPool.query(query2) ;
             }
@@ -181,7 +185,7 @@ const cancelBooking = async(req,res) => {
                 //update two collumns
                 const query2 = {
                     text : 'UPDATE "train_schedule_info" SET seat_details[$1][$2][$3] = $4 WHERE schedule_id = $5',
-                    values : [c_id,dimension[1]*data.seat_booked[i][0]+data.seat_booked[i][1]+1,3,0,data.schedule_id]
+                    values : [c_id,dimension[1]*(obj.booked_details[i][3]*dimension[2] + obj.booked_details[i][0] )+data.seat_booked[i][1]+1,3,0,data.schedule_id]
                 }
                 await trainPool.query(query2) ;
             }
