@@ -105,7 +105,8 @@ const getRoutes = async (req, res) => {
             return;
         }
         //routes can be multiple
-        res.status(200).json(data[0]);
+        console.log(data) ;
+        res.status(200).json(data);
     }catch(err){
         console.log(err);
         res.status(500).json({message: "Internal Server Error"});

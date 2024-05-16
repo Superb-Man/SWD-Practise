@@ -58,12 +58,14 @@ async function filter(from,to,date,train_uid = 'None') {
         values :[]
     }
     if(train_uid == 'None'){
-        query1.text = 'SELECT * FROM "train_schedule_info"' ;
-        query1.values = []
+        let today = new Date() ;
+        query1.text = 'SELECT * FROM "train_schedule_info" WHERE cancel_deadline >= $1 and booking = $2' ;
+        query1.values = [today,1]
     }
     else{
-        query1.text = 'SELECT * FROM "train_schedule_info" WHERE train_uid = $1' ;
-        query1.values = [train_uid] ;
+        let today = new Date() ;
+        query1.text = 'SELECT * FROM "train_schedule_info" WHERE train_uid = $1 and cancel_deadline >= $2 and booking = $3' ;
+        query1.values = [train_uid,today,1] ;
     }
 
     let results = (await trainPool.query(query1)).rows; 
@@ -253,7 +255,7 @@ const gettraininfo = async (req, res) => {
                         departure_time : results[i].routes[0].time,
                         arrival_date :  new Date(results[i].routes[l-1].date),
                         arrival_time : results[i].routes[l-1].time,
-                        cost_class : results[i].routes[l-1].cost_class[coach_idx] -  results[i].routes[0].cost_class[coach_idx] ,
+                        cost_class :  results[i].routes[0].cost_class[coach_idx] ,
                         coach_name : obj.coach_name,
                         routes : results[i].routes,
                         seat : obj.seat 
@@ -270,7 +272,7 @@ const gettraininfo = async (req, res) => {
         //Query handling
 
         if(obj.query != undefined && obj.query.localeCompare('quickest') == 0) {
-            trains = queryUtils.findQuickesttrain(trains) ;
+            trains = queryUtils.findQuickestTrain(trains) ;
             // console.log('here') ;
         }
         if(obj.query != undefined && obj.query.localeCompare('shortestroutes') == 0){
@@ -341,7 +343,7 @@ const getSeatAvailableByspecifictrain = async (req, res) => {
             departure_time : results[0].routes[0].time,
             arrival_date :  new Date(results[0].routes[l-1].date),
             arrival_time : results[0].routes[l-1].time,
-            cost_class : results[0].routes[l-1].cost_class[coach_idx] - results[0].routes[0].cost_class[coach_idx] ,
+            cost_class : results[0].routes[0].cost_class[coach_idx] ,
             coach_name : obj.coach_name,
             routes : results[0].routes,
             seat : obj.seat ,

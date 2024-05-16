@@ -22,7 +22,7 @@ router.post('/bus/:from/:to/:date/:category?', bodyParser,usearchController.getb
 router.post('/seat_details/:from/:to/:date/:category', bodyParser,usearchController.getSeatAvailableByspecificbus) ;
 
 
-// router.get('/train/temp_booking/:from/:to/:date/person=:persons/:coach/:train_uid', bodyParser,userBookingController.temporarySeatBooking) ;
+router.post('/bus/temp_booking/:from/:to/:date/:category', bodyParser,userBookingController.seatBooking) ;
 
 
 

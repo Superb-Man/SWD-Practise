@@ -20,7 +20,9 @@ router.get('/train/:from/:to/:date/person=:persons/:coach?', bodyParser,usearchC
 router.get('/seat_details/:from/:to/:date/person=:persons/:coach/:train_uid', bodyParser,usearchController.getSeatAvailableByspecifictrain) ;
 
 
-router.get('/train/temp_booking/:from/:to/:date/person=:persons/:coach/:train_uid', bodyParser,userBookingController.temporarySeatBooking) ;
+router.post('/train/temp_booking/:from/:to/:date/person=:persons/:coach/:train_uid', bodyParser,userBookingController.temporarySeatBooking) ;
+router.post('/train/cancelBooking', bodyParser,userBookingController.cancelBooking) ;
+router.post('/train/history', bodyParser,userBookingController.history) ;
 
 
 

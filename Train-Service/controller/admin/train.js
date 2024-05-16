@@ -166,21 +166,24 @@ const addTrainCompany = async(req,res)=>{
 // }
 const addTrain = async(req,res)=>{
     try{
-        req.body = {
-            train_uid: "Lara-104",
-            train_id : 1 
-        }
+        //at first get the id of train using company name
+        console.log(req.body) 
+        let {data,errorID} = await trainPool2.from('train_services')
+                                            .select('train_id')
+                                            .eq('company_name',req.body.company_name) ;
+        data = data[0] ;
+        console.log(data);
+        let inp = [req.body.train_uid,data.train_id] ;
         //cheking if same train added
         if(await getTrainByUid(req.body.train_uid).length == 0){
             res.status(400).json({message: "Train already exists"});
             return;
         }
-        let {error} = await trainPool2
-                            .from('train_details')
-                            .insert([req.body])
-        if(error){
-            throw error;
+        const query1 = {
+            text : 'INSERT INTO "train_details" ("train_uid","train_id") VALUES ($1,$2)',
+            values : inp
         }
+        const results  = (await trainPool.query(query1));
         res.status(200).json({message: "Train added"});
     }catch(err){
         console.log(err);
@@ -250,10 +253,9 @@ const getAllTrainsByCompanyName = async(req,res)=>{
     }
 };
 
-// req.params.train_uid = "Lara-62";
 // req.params.coach = 'SHOVAN'
 const showGrid = async(req,res)=>{
-    req.params.train_uid = "Lara-62";
+    req.params.train_uid = "L-62";
     req.params.coach = 'SHOVAN'
     try{
         let obj = await findIndexofCoach(req.params.train_uid,req.params.coach);

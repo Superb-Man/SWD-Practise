@@ -50,9 +50,13 @@ const busPool = server.busPool
 //             console.log("temporarySeatBooking") ;
 //             console.log(obj) ;
             const dimension_query = {
-                text : 'SELECT "bus_details".dimensions,"bus_details".last_middle FROM "bus_details" JOIN "bus_schedule_info" ON "bus_schedule_info".bus_name = "bus_details".bus_name  WHERE schedule_id = $1',
+                text : 'SELECT "bus_details".dimension,"bus_details".last_middle FROM "bus_details" JOIN "bus_schedule_info" ON "bus_schedule_info".bus_name = "bus_details".bus_name  WHERE schedule_id = $1',
                 values : [obj.schedule_id]
             }
+
+            const {dimension, last_middle} = ( await busPool.query(dimension_query) ).rows[0] ;
+
+            console.log(dimension,last_middle)
 
 //             let dimension = -1 ;
 //             let c_id = -1 ;
@@ -67,14 +71,33 @@ const busPool = server.busPool
 //                 }
 //             }
 //             console.log(dimension,c_id)
-//             for(let i = 0 ; i < obj.booked_deatils.length ; i++) {
+             for(let i = 0 ; i < obj.booked_details.length ; i++) {
 //                 //update two collumns
-//                 const query2 = {
-//                     text : 'UPDATE "train_schedule_info" SET seat_details[$1][$2][$3] = $4 WHERE schedule_id = $5',
-//                     values : [c_id,dimension[1]*obj.booked_deatils[i][0]+obj.booked_deatils[i][1]+1,3,1,obj.schedule_id]
-//                 }
-//                 await trainPool.query(query2) ;
-//             }
+
+                if(obj.booked_details[i][0] != -1 && obj.booked_details[i][0] != -1){
+
+                    //console.log( dimension[1],obj.booked_details[i][0] , obj.booked_details[i][1],1 , last_middle )
+
+                    const query2 = {
+                        text : 'UPDATE "bus_schedule_info" SET seat_details[$1][$2] = $3 WHERE schedule_id = $4',
+                        values : [ dimension[1]*obj.booked_details[i][0] + obj.booked_details[i][1]+1 + last_middle,3,1,obj.schedule_id]
+                    }
+                    await busPool.query(query2) ;
+
+                }
+
+                else{
+
+                    const query3 = {
+                        text : 'UPDATE "bus_schedule_info" SET seat_details[$1][$2] = $3 WHERE schedule_id = $4',
+                        values : [1,3,1,obj.schedule_id]
+                    }
+                    await busPool.query(query3) ;
+
+
+                }
+                
+             }
 //             await trainPool.query('COMMIT') ;
 //             res.status(200).json({message: "Seat Booked"}) ;
 

@@ -16,8 +16,9 @@ router.post('/routes/deleteRoutes', bodyParser,routeController.deleteRoutes) ; /
 router.post('/train/addTrain', bodyParser,trainController.addTrain) ; //tested
 router.post('/train/addTrainCompany', bodyParser,trainController.addTrainCompany) ; //tested
 router.post('/train/addDetails', bodyParser,trainController.addDetails) ; //tested
-router.post('/train/:train_uid/updateSchedule', bodyParser,scheduleController.updateSchedule) ; //tested
+router.post('/train/updateSchedule', bodyParser,scheduleController.updateSchedule) ; //tested
 router.post('/train/getInfoBySchedule', bodyParser,scheduleController.getSeatInfoBySchedule) ; //tested
+router.post('/train/updateBookingStatus', bodyParser,scheduleController.updateBookingStatus) ; //tested
 //booking
 //setBookingStatusByCoach
 
