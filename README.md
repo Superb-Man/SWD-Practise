@@ -12,4 +12,4 @@ after the payment
 ![Screenshot from 2024-05-16 23-31-35](https://github.com/Superb-Man/e-TicketBooking/assets/104999005/861c7504-24da-44ff-ac71-49fbcb1c8f01)
 # Train Admin Controller Shots
 ![Screenshot from 2024-05-24 12-18-26](https://github.com/Superb-Man/e-TicketBooking/assets/104999005/b03e720b-db52-4b76-ac56-da60b1108d97)
-![Screenshot from 2024-05-24 12-24-25](https://github.com/Superb-Man/e-TicketBooking/assets/104999005/ed79542d-3b66-438c-bc1b-b3d27e6a7d58)
+![Screenshot from 2024-05-24 12-37-48](https://github.com/Superb-Man/e-TicketBooking/assets/104999005/41d30b4e-27f3-42f6-937b-1eb738754eae)
